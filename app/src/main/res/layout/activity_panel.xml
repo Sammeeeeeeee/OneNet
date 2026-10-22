@@ -13,6 +13,7 @@
         android:layout_marginBottom="@dimen/panel_margin"
         android:background="@drawable/panel_background"
         android:clickable="true"
+        android:clipToOutline="true"
         android:focusable="false"
         android:orientation="vertical">
 
@@ -145,56 +146,6 @@
                     android:orientation="vertical"
                     android:showDividers="middle"
                     android:visibility="gone">
-
-                    <LinearLayout
-                        android:id="@+id/connected_row"
-                        style="@style/PanelRow">
-
-                        <ImageView
-                            android:id="@+id/connected_icon"
-                            style="@style/PanelRowIcon"
-                            android:importantForAccessibility="no"
-                            android:tint="?android:attr/colorAccent" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/connected_title"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:textAppearance="@style/PanelRowTitle"
-                                android:textColor="?android:attr/colorAccent" />
-
-                            <TextView
-                                android:id="@+id/connected_summary"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:textAppearance="@style/PanelSummary" />
-                        </LinearLayout>
-
-                        <View style="@style/PanelVerticalDivider" />
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:contentDescription="@string/wifi_settings"
-                            android:src="@drawable/ic_settings"
-                            android:tint="?android:attr/textColorSecondary" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/network_list"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:divider="@drawable/panel_divider_icon"
-                        android:orientation="vertical"
-                        android:showDividers="middle" />
 
                     <LinearLayout
                         android:id="@+id/see_all"

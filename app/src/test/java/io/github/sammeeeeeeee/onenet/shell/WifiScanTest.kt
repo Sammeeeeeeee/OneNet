@@ -51,6 +51,17 @@ class WifiScanTest {
         WifiScan.parse(output(status)).others,
     )
 
+    @Test fun similarSignalsSortByName() {
+        val close = listOf(
+            row("aa:bb:cc:dd:ee:07", "      -61         ", "Zeta", "[ESS]"),
+            row("aa:bb:cc:dd:ee:08", "      -63         ", "Alpha", "[ESS]"),
+        ).joinToString("\n")
+        assertEquals(
+            listOf("Alpha", "Zeta"),
+            WifiScan.parse("Wifi is enabled\n--onenet--\n$close\n--onenet--\n").others.map { it.ssid },
+        )
+    }
+
     @Test fun strongestAccessPointWins() =
         assertEquals(-48, WifiScan.scanResults(scan).filter { it.ssid == "Home" }.maxOf { it.rssi })
 

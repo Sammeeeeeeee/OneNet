@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- One Wi-Fi network. The top row (connected, or being joined) is drawn in the accent colour. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/PanelRow">
 
@@ -11,8 +12,7 @@
             android:id="@+id/icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:tint="?android:attr/textColorPrimary" />
+            android:importantForAccessibility="no" />
 
         <ImageView
             android:id="@+id/lock"
@@ -44,4 +44,27 @@
             android:layout_height="wrap_content"
             android:textAppearance="@style/PanelSummary" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="16dp"
+        android:indeterminateTint="?android:attr/colorAccent"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/details_divider"
+        style="@style/PanelVerticalDivider"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/details"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="@string/wifi_settings"
+        android:src="@drawable/ic_settings"
+        android:tint="?android:attr/textColorSecondary"
+        android:visibility="gone" />
 </LinearLayout>

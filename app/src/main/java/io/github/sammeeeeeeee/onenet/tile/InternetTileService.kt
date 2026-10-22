@@ -1,7 +1,6 @@
 package io.github.sammeeeeeeee.onenet.tile
 
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
@@ -9,7 +8,6 @@ import android.service.quicksettings.TileService
 import android.util.Log
 import io.github.sammeeeeeeee.onenet.Icons
 import io.github.sammeeeeeeee.onenet.Prefs
-import io.github.sammeeeeeeee.onenet.R
 import io.github.sammeeeeeeee.onenet.net.NetworkMonitor
 import io.github.sammeeeeeeee.onenet.net.WifiToggle
 import io.github.sammeeeeeeee.onenet.panel.PanelActivity
@@ -36,7 +34,7 @@ class InternetTileService : TileService() {
         super.onStartListening()
         listening?.cancel()
         listening = scope.launch {
-            val labels = labels(this@InternetTileService)
+            val labels = tileLabels(this@InternetTileService)
             combine(
                 NetworkMonitor(this@InternetTileService, this).state,
                 Prefs.nameAsTitleFlow(this@InternetTileService),
@@ -129,35 +127,4 @@ class InternetTileService : TileService() {
         const val HANDOVER_FRAME_MS = 90L
         const val SEARCH_FRAME_MS = 220L
     }
-}
-
-private val TileIcon.drawable: Int
-    get() = when (this) {
-        is TileIcon.Wifi -> Icons.wifi(level, noInternet)
-        is TileIcon.MobileData -> Icons.data(noInternet)
-        is TileIcon.NoInternet ->
-            if (networksAvailable) R.drawable.ic_qs_no_internet_available else R.drawable.ic_qs_no_internet_unavailable
-        TileIcon.Ethernet -> R.drawable.ic_qs_ethernet
-        TileIcon.Globe -> R.drawable.ic_qs_globe
-        TileIcon.WifiSearching -> Icons.WIFI_SEARCH[0]
-        is TileIcon.Handover -> to.drawable
-    }
-
-private fun labels(context: Context) = with(context) {
-    Labels(
-        internet = getString(R.string.internet),
-        wifi = getString(R.string.wifi),
-        mobileData = getString(R.string.mobile_data),
-        ethernet = getString(R.string.ethernet),
-        connected = getString(R.string.connected),
-        noInternet = getString(R.string.no_internet),
-        notConnected = getString(R.string.not_connected),
-        networksAvailable = getString(R.string.networks_available),
-        networksUnavailable = getString(R.string.networks_unavailable),
-        airplaneMode = getString(R.string.airplane_mode),
-        roaming = getString(R.string.roaming),
-        searching = getString(R.string.searching),
-        connecting = getString(R.string.connecting),
-        off = getString(R.string.off),
-    )
 }

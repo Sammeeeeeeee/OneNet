@@ -13,7 +13,7 @@ data class WifiNetwork(
 data class WifiList(
     val enabled: Boolean,
     val connected: WifiNetwork?,
-    /** Saved first, then strongest. */
+    /** Saved first, then by signal bars, then by name, as Pixel sorts its list. */
     val others: List<WifiNetwork>,
 )
 
@@ -52,7 +52,7 @@ object WifiScan {
             .map { it.copy(savedId = savedIds[it.ssid]) }
             .sortedWith(
                 compareByDescending<WifiNetwork> { it.savedId != null }
-                    .thenByDescending { it.rssi }
+                    .thenByDescending { signalLevel(it.rssi) }
                     .thenBy { it.ssid.lowercase() }
             )
         return WifiList(enabled = !WifiStatus.isDisabled(status), connected, others)
@@ -64,6 +64,12 @@ object WifiScan {
         val ssid = rest.take(32).trimEnd()
         if (ssid.isEmpty()) null else WifiNetwork(ssid, match.groupValues[1].toInt(), security(rest.drop(32)))
     }.toList()
+
+    /**
+     * Bars 0..4 (WifiManager's original scale, -100 to -55 dBm). Sorting by bars rather than
+     * dBm keeps the list from reshuffling as signals flicker.
+     */
+    fun signalLevel(rssi: Int) = ((rssi.coerceIn(-100, -55) + 100) * 4 / 45)
 
     fun security(flags: String) = when {
         "EAP" in flags && "PSK" !in flags && "SAE" !in flags -> Security.EAP
