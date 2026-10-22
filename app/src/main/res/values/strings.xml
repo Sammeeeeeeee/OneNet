@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OneNet</string>
+    <string name="tile_label">Internet</string>
+
+    <string name="internet">Internet</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="mobile_data">Mobile data</string>
+    <string name="ethernet">Ethernet</string>
+    <string name="connected">Connected</string>
+    <string name="no_internet">No internet</string>
+    <string name="no_service">No service</string>
+    <string name="not_connected">Not connected</string>
+    <string name="off">Off</string>
+    <string name="airplane_mode">Airplane mode</string>
+    <string name="roaming">Roaming</string>
+
+    <string name="setup_intro">One Internet tile for Wi-Fi and mobile data. Stretch it to 2× wide in the quick panel to see the network name.</string>
+    <string name="setup_shizuku">Shizuku</string>
+    <string name="setup_shizuku_ready">Connected.</string>
+    <string name="setup_shizuku_permission">Running. Allow OneNet to use it so the tile can show the Wi-Fi name.</string>
+    <string name="setup_shizuku_unavailable">Not running. Without it the tile shows “Wi-Fi” instead of the network name.</string>
+    <string name="setup_shizuku_allow">Allow</string>
+    <string name="setup_shizuku_open">Open Shizuku</string>
+    <string name="setup_quick_panel">Quick panel</string>
+    <string name="setup_add_tile">Add Internet tile</string>
+    <string name="setup_tile_added">Tile added</string>
+    <string name="setup_tile_already_added">Already in the quick panel</string>
+    <string name="setup_tile_failed">Add it from the quick panel: Edit, then Add a control.</string>
+    <string name="setup_name_as_title">Network name as title</string>
+    <string name="setup_name_as_title_summary">Off: Pixel wording, “Internet” with the network name below.</string>
+</resources>
