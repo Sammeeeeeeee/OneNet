@@ -14,7 +14,7 @@ class TileContentTest {
         internet = "Internet", wifi = "Wi-Fi", mobileData = "Mobile data", ethernet = "Ethernet",
         connected = "Connected", noInternet = "No internet", notConnected = "Not connected",
         networksAvailable = "Networks available", networksUnavailable = "Networks unavailable",
-        airplaneMode = "Flight mode", roaming = "Roaming", scanningForWifi = "Scanning for Wi-Fi…",
+        airplaneMode = "Flight mode", roaming = "Roaming", searching = "Searching…", connecting = "Connecting…",
     )
 
     private val wifi = DefaultNetwork(handle = 1, transport = Transport.WIFI, validated = true, wifiLevel = 3)
@@ -107,9 +107,28 @@ class TileContentTest {
 
     // Tap toggle (Pixel's Wi-Fi tile)
 
-    @Test fun resumingShowsScanning() = assertEquals(
-        TileContent("Internet", "Scanning for Wi-Fi…", TileIcon.Wifi(0), active = true),
+    @Test fun resumingSearches() = assertEquals(
+        TileContent("Internet", "Searching…", TileIcon.WifiSearching, active = true),
         content(NetworkState(default = cell, mobile = vodafone, toggle = WifiToggle.State.SCANNING)),
+    )
+
+    // Joined but not yet carrying traffic: name it instead of flicking back to mobile.
+    @Test fun resumingNamesTheNetworkWhileConnecting() = assertEquals(
+        TileContent("Internet", "Home", TileIcon.WifiSearching, active = true),
+        content(
+            NetworkState(
+                default = cell, mobile = vodafone, ssid = "Home", wifiConnected = true,
+                toggle = WifiToggle.State.SCANNING,
+            )
+        ),
+    )
+
+    @Test fun resumingNameOnTop() = assertEquals(
+        TileContent("Home", "Connecting…", TileIcon.WifiSearching, active = true),
+        content(
+            NetworkState(default = cell, ssid = "Home", wifiConnected = true, toggle = WifiToggle.State.SCANNING),
+            nameAsTitle = true,
+        ),
     )
 
     @Test fun scanningEndsOnceWifiCarriesTraffic() = assertEquals(

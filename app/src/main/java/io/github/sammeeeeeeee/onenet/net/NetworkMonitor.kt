@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.provider.Settings
@@ -46,14 +47,25 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
     private val wifiEnabled = broadcastFlow(WifiManager.WIFI_STATE_CHANGED_ACTION) { wifi.isWifiEnabled }
         .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
 
+    /** Handle of the joined Wi-Fi network, default or not; null when none. */
+    private val wifiConnection = wifiConnectionFlow()
+        .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
+
+    private data class WifiPart(val connected: Boolean, val ssid: String?, val networksAvailable: Boolean?)
+
     val state: Flow<NetworkState> = combine(
-        combine(defaultNetwork, ssidFlow(), networksAvailableFlow(), ::Triple),
+        defaultNetwork,
+        combine(wifiConnection, ssidFlow(), networksAvailableFlow()) { handle, ssid, networksAvailable ->
+            WifiPart(handle != null, ssid, networksAvailable)
+        },
         wifiEnabled,
-        broadcastFlow(Intent.ACTION_AIRPLANE_MODE_CHANGED) { airplaneModeOn() },
-        mobileFlow(),
+        combine(broadcastFlow(Intent.ACTION_AIRPLANE_MODE_CHANGED) { airplaneModeOn() }, mobileFlow(), ::Pair),
         WifiToggle.state,
-    ) { (default, ssid, networksAvailable), wifiEnabled, airplaneMode, mobile, toggle ->
-        NetworkState(airplaneMode, wifiEnabled, default, ssid, mobile, networksAvailable, toggle)
+    ) { default, wifiPart, wifiEnabled, (airplaneMode, mobile), toggle ->
+        NetworkState(
+            airplaneMode, wifiEnabled, default, wifiPart.ssid, mobile, wifiPart.networksAvailable, toggle,
+            wifiPart.connected,
+        )
     }.distinctUntilChanged()
 
     private fun defaultNetworkFlow(): Flow<DefaultNetwork?> = callbackFlow {
@@ -104,12 +116,35 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
         return (wifi.calculateSignalLevel(rssi) * 4 + max / 2) / max
     }
 
-    /** Wi-Fi name via Shizuku; apps can't read it from a tile without background location. */
-    private fun ssidFlow(): Flow<String?> = combine(
-        defaultNetwork.map { it?.takeIf { network -> network.transport == Transport.WIFI }?.handle }
-            .distinctUntilChanged(),
-        Shell.status,
-    ) { handle, status -> handle to status }
+    private fun wifiConnectionFlow(): Flow<Long?> = callbackFlow {
+        val joined = LinkedHashSet<Network>()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                joined += network
+                trySend(joined.first().networkHandle)
+            }
+
+            override fun onLost(network: Network) {
+                joined -= network
+                trySend(joined.firstOrNull()?.networkHandle)
+            }
+        }
+        @Suppress("DEPRECATION")
+        trySend(connectivity.allNetworks.firstOrNull {
+            connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        }?.networkHandle)
+        connectivity.registerNetworkCallback(
+            NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
+            callback,
+        )
+        awaitClose { connectivity.unregisterNetworkCallback(callback) }
+    }.distinctUntilChanged()
+
+    /**
+     * Wi-Fi name via Shizuku; apps can't read it from a tile without background location.
+     * Read as soon as Wi-Fi joins, so the tile can name it while it's still connecting.
+     */
+    private fun ssidFlow(): Flow<String?> = combine(wifiConnection, Shell.status) { handle, status -> handle to status }
         .distinctUntilChanged()
         .mapLatest { (handle, status) -> handle?.let { resolveSsid(it, status) } }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="panel_background">#F2101012</color>
+    <color name="panel_card">#FF242426</color>
+    <color name="panel_divider">#24FFFFFF</color>
+</resources>

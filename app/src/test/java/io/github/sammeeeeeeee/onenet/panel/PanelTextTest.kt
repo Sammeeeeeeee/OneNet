@@ -52,4 +52,11 @@ class PanelTextTest {
         )
         assertNull(PanelText.mobileSummary(mobile.copy(networkType = null), mobileActive = false, labels))
     }
+
+    @Test fun networkRowsMatchPixel() {
+        assertEquals(2, PanelText.networkRows(mobileRowVisible = true, connectedVisible = true))
+        assertEquals(3, PanelText.networkRows(mobileRowVisible = true, connectedVisible = false))
+        assertEquals(2, PanelText.networkRows(mobileRowVisible = false, connectedVisible = true))
+        assertEquals(3, PanelText.networkRows(mobileRowVisible = false, connectedVisible = false))
+    }
 }

@@ -12,6 +12,8 @@ sealed interface TileIcon {
     data class NoInternet(val networksAvailable: Boolean) : TileIcon
     data object Ethernet : TileIcon
     data object Globe : TileIcon
+    /** Pixel's searching animation: Wi-Fi arcs filling from the dot outwards, on a loop. */
+    data object WifiSearching : TileIcon
 }
 
 data class TileContent(
@@ -33,7 +35,8 @@ data class Labels(
     val networksUnavailable: String,
     val airplaneMode: String,
     val roaming: String,
-    val scanningForWifi: String,
+    val searching: String,
+    val connecting: String,
 )
 
 /**
@@ -43,14 +46,19 @@ data class Labels(
  * for quick panels that show only one line.
  */
 fun tileContent(state: NetworkState, nameAsTitle: Boolean, labels: Labels): TileContent {
-    // Mid-toggle, show where the tap is heading, as Pixel's tile does.
+    // Mid-toggle, show where the tap is heading, as Pixel's tile does. Bringing Wi-Fi back it
+    // searches, then names the network while it connects, then shows it carrying traffic.
     when (state.toggle) {
-        WifiToggle.State.SCANNING -> if (state.default?.transport != Transport.WIFI) return TileContent(
-            title = if (nameAsTitle) labels.wifi else labels.internet,
-            subtitle = labels.scanningForWifi,
-            icon = TileIcon.Wifi(0),
-            active = true,
-        )
+        WifiToggle.State.SCANNING -> if (state.default?.transport != Transport.WIFI) {
+            val ssid = state.ssid.takeIf { state.wifiConnected }
+            val status = if (state.wifiConnected) labels.connecting else labels.searching
+            return TileContent(
+                title = if (nameAsTitle) ssid ?: labels.wifi else labels.internet,
+                subtitle = if (nameAsTitle || ssid == null) status else ssid,
+                icon = TileIcon.WifiSearching,
+                active = true,
+            )
+        }
         WifiToggle.State.PAUSING -> if (state.default?.transport == Transport.WIFI) {
             val mobile = state.mobile?.takeIf { it.dataEnabled && it.inService }
             val next = mobile?.let { DefaultNetwork(handle = 0, transport = Transport.CELLULAR, validated = true) }

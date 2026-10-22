@@ -10,19 +10,19 @@ Pixel's combined **Internet** tile (Android 12–16) for Samsung One UI 9: one q
 
 These are the same rules Pixels use. If your quick panel shows only one line, turn on **Network name as title** in the app.
 
-- **Tap:** Pixel's Wi-Fi toggle. On Wi-Fi it pauses Wi-Fi so mobile data takes over (the radio stays on); tap again to bring Wi-Fi back. If Wi-Fi is off, it turns it on.
-- **Long-press:** Pixel's internet panel inside One UI's quick panel, through One UI's own tile-panel hooks: mobile data and Wi-Fi switches, the connected network, and nearby networks to join. Tap the carrier to switch to mobile data. If your One UI build doesn't offer those hooks, long-press opens the system internet panel instead.
+- **Tap:** Pixel's Wi-Fi toggle. On Wi-Fi it pauses Wi-Fi so mobile data takes over (the radio stays on). Tap again and it searches, names the network as it connects, then shows it in use. If Wi-Fi is off, tap turns it on.
+- **Long-press:** Pixel's internet panel: mobile data and Wi-Fi switches, the connected network, and nearby networks to join. Tap the carrier to switch to mobile data.
 
-Behaviour follows the code Pixels run (AOSP Android 17): the toggle from the Wi-Fi tile, the panel and its wording from the internet dialog. Pixels on Android 17 split the tile into separate Wi-Fi and mobile data tiles; OneNet keeps one tile and puts the panel on long-press. Everything that changes networks needs Shizuku.
+Behaviour follows the code Pixels run (AOSP Android 17). Pixels on Android 17 split the tile into separate Wi-Fi and mobile data tiles; OneNet keeps one tile. Changing networks needs Shizuku.
 
 ## Requirements
 
 - Android 17 (One UI 9)
-- [Shizuku](https://shizuku.rikka.app/), for the Wi-Fi name. Android doesn't let a tile read it otherwise.
+- [Shizuku](https://shizuku.rikka.app/), to read the Wi-Fi name and switch networks. Android doesn't let a tile do either otherwise.
 
 ## Install
 
-1. Download the APK from the latest [Build](../../actions/workflows/build.yml) run (artifact `onenet-<n>`).
+1. Download the APK from [Releases](../../releases/latest), or the latest [Build](../../actions/workflows/build.yml) run (artifact `onenet-<n>`).
 2. Open OneNet, allow Shizuku, then tap **Add Internet tile**. You can also add it from the quick panel: Edit › Add a control.
 3. In the quick panel's Edit mode, drag the tile's right edge to make it 2× wide.
 

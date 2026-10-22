@@ -33,4 +33,6 @@ data class NetworkState(
     /** Wi-Fi networks in range while disconnected; null when unknown (no Shizuku). */
     val networksAvailable: Boolean? = null,
     val toggle: WifiToggle.State = WifiToggle.State.NORMAL,
+    /** Joined a Wi-Fi network, whether or not it carries traffic yet; [ssid] is its name. */
+    val wifiConnected: Boolean = false,
 )

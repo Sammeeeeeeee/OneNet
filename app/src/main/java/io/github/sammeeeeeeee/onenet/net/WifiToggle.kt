@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.telephony.SubscriptionManager
 import io.github.sammeeeeeeee.onenet.shell.Shell
 import io.github.sammeeeeeeee.onenet.shell.WifiStatus
@@ -55,14 +54,14 @@ object WifiToggle {
         if (!Shell.pauseWifi(SubscriptionManager.getDefaultDataSubscriptionId())) {
             Shell.exec("cmd wifi set-wifi-enabled disabled")
         }
-        settle(context, wifiConnected = false)
+        settle(context, wifiDefault = false)
     }
 
     suspend fun resume(context: Context) {
         _state.value = State.SCANNING
         Shell.resumeWifi()
         Shell.exec("cmd wifi start-scan")
-        settle(context, wifiConnected = true)
+        settle(context, wifiDefault = true)
     }
 
     suspend fun enable(context: Context) {
@@ -70,41 +69,31 @@ object WifiToggle {
         resume(context)
     }
 
-    /** Holds the transitional state until Wi-Fi connects (or drops), at most 10 s. */
-    private fun settle(context: Context, wifiConnected: Boolean) {
+    /** Holds the transitional state until Wi-Fi carries traffic (or stops), at most 10 s, as Pixel does. */
+    private fun settle(context: Context, wifiDefault: Boolean) {
         val connectivity = context.applicationContext.getSystemService(ConnectivityManager::class.java)
         settling?.cancel()
         settling = scope.launch {
             withTimeoutOrNull(SETTLE_TIMEOUT_MS) {
-                wifiConnectedFlow(connectivity).first { it == wifiConnected }
+                wifiIsDefaultFlow(connectivity).first { it == wifiDefault }
             }
             _state.value = State.NORMAL
         }
     }
 
     // Callbacks, not activeNetwork: Android hides the active network from apps whose network
-    // access is blocked in the background, which left the tile stuck on "Scanning for Wi-Fi…".
-    private fun wifiConnectedFlow(connectivity: ConnectivityManager): Flow<Boolean> = callbackFlow {
-        val connected = mutableSetOf<Network>()
+    // access is blocked in the background, which left the tile stuck mid-toggle.
+    private fun wifiIsDefaultFlow(connectivity: ConnectivityManager): Flow<Boolean> = callbackFlow {
         val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                connected += network
-                trySend(true)
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                trySend(caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
             }
 
             override fun onLost(network: Network) {
-                connected -= network
-                trySend(connected.isNotEmpty())
+                trySend(false)
             }
         }
-        @Suppress("DEPRECATION")
-        trySend(connectivity.allNetworks.any {
-            connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-        })
-        connectivity.registerNetworkCallback(
-            NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
-            callback,
-        )
+        connectivity.registerDefaultNetworkCallback(callback)
         awaitClose { connectivity.unregisterNetworkCallback(callback) }
     }
 }

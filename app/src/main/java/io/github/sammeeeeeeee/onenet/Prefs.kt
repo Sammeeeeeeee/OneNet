@@ -13,6 +13,7 @@ object Prefs {
     private const val KEY_NAME_AS_TITLE = "network_name_as_title"
     private const val KEY_SSID_HANDLE = "ssid_handle"
     private const val KEY_SSID = "ssid"
+    private const val KEY_TURNED_OFF_MOBILE_DATA = "turned_off_mobile_data"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -40,4 +41,10 @@ object Prefs {
 
     fun cacheSsid(context: Context, handle: Long, ssid: String) =
         prefs(context).edit().putLong(KEY_SSID_HANDLE, handle).putString(KEY_SSID, ssid).apply()
+
+    /** Pixel asks before turning off mobile data from the panel, the first time only. */
+    fun hasTurnedOffMobileData(context: Context) = prefs(context).getBoolean(KEY_TURNED_OFF_MOBILE_DATA, false)
+
+    fun setTurnedOffMobileData(context: Context) =
+        prefs(context).edit().putBoolean(KEY_TURNED_OFF_MOBILE_DATA, true).apply()
 }

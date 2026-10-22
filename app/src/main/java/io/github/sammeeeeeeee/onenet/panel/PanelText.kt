@@ -41,4 +41,10 @@ object PanelText {
         !mobile.inService -> labels.noConnection
         else -> mobile.networkType
     }
+
+    /** Other networks listed: four rows in total, at most three Wi-Fi (getWifiListMaxCount). */
+    fun networkRows(mobileRowVisible: Boolean, connectedVisible: Boolean): Int {
+        val rows = minOf(if (mobileRowVisible) 3 else 4, 3)
+        return if (connectedVisible) rows - 1 else rows
+    }
 }
