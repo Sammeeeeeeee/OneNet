@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Content of One UI's panel for this tile (RemoteViews): Pixel's internet panel rows. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/notice"
+        style="@style/DetailNotice"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/mobile_row"
+        style="@style/DetailRow">
+
+        <ImageView
+            android:id="@+id/mobile_icon"
+            style="@style/DetailIcon" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/mobile_title"
+                style="@style/DetailTitle" />
+
+            <TextView
+                android:id="@+id/mobile_summary"
+                style="@style/DetailSummary" />
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/mobile_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/mobile_data" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/DetailRow">
+
+        <TextView
+            style="@style/DetailTitle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/wifi" />
+
+        <Switch
+            android:id="@+id/wifi_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/wifi" />
+    </LinearLayout>
+
+    <FrameLayout style="@style/DetailDivider" />
+
+    <TextView
+        android:id="@+id/subtitle"
+        style="@style/DetailNotice" />
+
+    <LinearLayout
+        android:id="@+id/network_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+</LinearLayout>

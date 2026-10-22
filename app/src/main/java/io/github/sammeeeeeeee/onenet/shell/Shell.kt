@@ -71,6 +71,12 @@ object Shell {
         }.getOrDefault(Status.UNAVAILABLE)
     }
 
+    /** Waits briefly for Shizuku's binder, which lands just after a cold process start. */
+    suspend fun awaitReady(timeoutMs: Long = 1500): Boolean {
+        refresh()
+        return withTimeoutOrNull(timeoutMs) { status.first { it == Status.READY } } != null
+    }
+
     /** Shows Shizuku's permission dialog. Call from a visible activity. */
     fun requestPermission() {
         runCatching { Shizuku.requestPermission(PERMISSION_REQUEST) }

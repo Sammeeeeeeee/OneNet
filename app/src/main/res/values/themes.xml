@@ -2,18 +2,12 @@
 <resources>
     <style name="Theme.OneNet" parent="android:Theme.DeviceDefault.DayNight" />
 
-    <!-- Samsung skins DeviceDefault as One UI, so framework widgets here render as One UI's. -->
-    <style name="Theme.OneNet.Panel" parent="android:Theme.DeviceDefault.DayNight">
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowActionBar">false</item>
+    <!-- Long-press fallback that only forwards to the system internet panel. -->
+    <style name="Theme.OneNet.Invisible" parent="android:Theme.DeviceDefault.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:windowBlurBehindEnabled">true</item>
-        <item name="android:windowBlurBehindRadius">@dimen/panel_blur</item>
         <item name="android:windowAnimationStyle">@null</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowNoDisplay">true</item>
     </style>
 
     <style name="SectionTitle">
@@ -25,46 +19,7 @@
         <item name="android:textColor">?android:attr/colorAccent</item>
     </style>
 
-    <style name="PanelTitle" parent="android:TextAppearance.DeviceDefault">
-        <item name="android:textSize">32sp</item>
-        <item name="android:textFontWeight">600</item>
-        <item name="android:textColor">@color/panel_text</item>
-    </style>
-
-    <style name="PanelSectionText" parent="android:TextAppearance.DeviceDefault">
-        <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/panel_text_secondary</item>
-    </style>
-
-    <style name="PanelRowTitle">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:ellipsize">end</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault</item>
-        <item name="android:textSize">17sp</item>
-        <item name="android:textColor">@color/panel_text</item>
-    </style>
-
-    <style name="PanelRowSummary">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/panel_text_secondary</item>
-    </style>
-
-    <style name="PanelTextButton">
-        <item name="android:layout_height">56dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:background">@drawable/panel_row_background</item>
-        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:textFontWeight">600</item>
-        <item name="android:textColor">@color/panel_text</item>
-    </style>
-
-    <style name="PanelRow">
+    <style name="DetailRow">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">56dp</item>
@@ -73,27 +28,45 @@
         <item name="android:paddingStart">26dp</item>
         <item name="android:paddingEnd">22dp</item>
         <item name="android:paddingVertical">8dp</item>
-        <item name="android:background">@drawable/panel_row_background</item>
     </style>
 
-    <style name="PanelRowIcon">
+    <style name="DetailIcon">
         <item name="android:layout_width">24dp</item>
         <item name="android:layout_height">24dp</item>
         <item name="android:layout_marginEnd">16dp</item>
-        <item name="android:tint">@color/panel_text</item>
+        <item name="android:tint">@color/detail_text</item>
     </style>
 
-    <style name="PanelDivider">
+    <style name="DetailTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/detail_text</item>
+    </style>
+
+    <style name="DetailSummary">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/detail_text_secondary</item>
+    </style>
+
+    <style name="DetailNotice">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingHorizontal">26dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/detail_text_secondary</item>
+    </style>
+
+    <style name="DetailDivider">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>
         <item name="android:layout_marginHorizontal">20dp</item>
-        <item name="android:background">@color/panel_divider</item>
-    </style>
-
-    <style name="PanelVerticalDivider">
-        <item name="android:layout_width">1dp</item>
-        <item name="android:layout_height">24dp</item>
-        <item name="android:layout_marginHorizontal">14dp</item>
-        <item name="android:background">@color/panel_divider</item>
+        <item name="android:background">@color/detail_divider</item>
     </style>
 </resources>

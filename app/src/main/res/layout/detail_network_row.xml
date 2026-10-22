@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/PanelRow">
+    android:id="@+id/row"
+    style="@style/DetailRow">
 
     <FrameLayout
         android:layout_width="24dp"
@@ -11,17 +12,15 @@
             android:id="@+id/icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:tint="@color/panel_text" />
+            android:tint="@color/detail_text" />
 
         <ImageView
             android:id="@+id/lock"
             android:layout_width="11dp"
             android:layout_height="11dp"
             android:layout_gravity="bottom|end"
-            android:importantForAccessibility="no"
             android:src="@drawable/ic_lock"
-            android:tint="@color/panel_text" />
+            android:tint="@color/detail_text" />
     </FrameLayout>
 
     <LinearLayout
@@ -32,10 +31,20 @@
 
         <TextView
             android:id="@+id/title"
-            style="@style/PanelRowTitle" />
+            style="@style/DetailTitle" />
 
         <TextView
             android:id="@+id/summary"
-            style="@style/PanelRowSummary" />
+            style="@style/DetailSummary" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/settings"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="12dp"
+        android:contentDescription="@string/wifi_settings"
+        android:src="@drawable/ic_settings"
+        android:tint="@color/detail_text_secondary"
+        android:visibility="gone" />
 </LinearLayout>

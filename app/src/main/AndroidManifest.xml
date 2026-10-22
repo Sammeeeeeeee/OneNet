@@ -6,6 +6,9 @@
 
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
+        <intent>
+            <action android:name="android.settings.panel.action.INTERNET_CONNECTIVITY" />
+        </intent>
     </queries>
 
     <application
@@ -33,18 +36,22 @@
             </intent-filter>
         </activity>
 
-        <!-- Long-press on the tile opens the internet panel. -->
+        <!-- Long-press when One UI doesn't open the tile's own panel. -->
         <activity
-            android:name=".panel.PanelActivity"
+            android:name=".panel.SystemPanelActivity"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:noHistory="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.OneNet.Panel">
+            android:theme="@style/Theme.OneNet.Invisible">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".panel.DetailActionReceiver"
+            android:exported="false" />
 
         <service
             android:name=".tile.InternetTileService"
