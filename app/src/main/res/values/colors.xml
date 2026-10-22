@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#3E7BFA</color>
+    <!-- One UI light surfaces; slightly translucent over the blurred backdrop. -->
+    <color name="panel_background">#F2F4F4F6</color>
+    <color name="panel_card">#FFFFFFFF</color>
+    <color name="panel_divider">#1A000000</color>
 </resources>

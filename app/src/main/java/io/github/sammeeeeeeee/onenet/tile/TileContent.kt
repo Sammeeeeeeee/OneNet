@@ -1,7 +1,9 @@
 package io.github.sammeeeeeeee.onenet.tile
 
+import io.github.sammeeeeeeee.onenet.net.DefaultNetwork
 import io.github.sammeeeeeeee.onenet.net.NetworkState
 import io.github.sammeeeeeeee.onenet.net.Transport
+import io.github.sammeeeeeeee.onenet.net.WifiToggle
 
 sealed interface TileIcon {
     data class Wifi(val level: Int, val noInternet: Boolean = false) : TileIcon
@@ -31,6 +33,7 @@ data class Labels(
     val networksUnavailable: String,
     val airplaneMode: String,
     val roaming: String,
+    val scanningForWifi: String,
 )
 
 /**
@@ -40,6 +43,21 @@ data class Labels(
  * for quick panels that show only one line.
  */
 fun tileContent(state: NetworkState, nameAsTitle: Boolean, labels: Labels): TileContent {
+    // Mid-toggle, show where the tap is heading, as Pixel's tile does.
+    when (state.toggle) {
+        WifiToggle.State.SCANNING -> return TileContent(
+            title = if (nameAsTitle) labels.wifi else labels.internet,
+            subtitle = labels.scanningForWifi,
+            icon = TileIcon.Wifi(0),
+            active = true,
+        )
+        WifiToggle.State.PAUSING -> if (state.default?.transport == Transport.WIFI) {
+            val mobile = state.mobile?.takeIf { it.dataEnabled && it.inService }
+            val next = mobile?.let { DefaultNetwork(handle = 0, transport = Transport.CELLULAR, validated = true) }
+            return tileContent(state.copy(default = next, toggle = WifiToggle.State.NORMAL), nameAsTitle, labels)
+        }
+        WifiToggle.State.NORMAL -> Unit
+    }
     val default = state.default ?: return disconnected(state, labels)
     val noInternet = !default.validated
     return when (default.transport) {

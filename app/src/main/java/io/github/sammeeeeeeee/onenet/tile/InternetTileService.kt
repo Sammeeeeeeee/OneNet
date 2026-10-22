@@ -4,13 +4,15 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
-import android.provider.Settings
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
+import io.github.sammeeeeeeee.onenet.Icons
 import io.github.sammeeeeeeee.onenet.Prefs
 import io.github.sammeeeeeeee.onenet.R
 import io.github.sammeeeeeeee.onenet.net.NetworkMonitor
+import io.github.sammeeeeeeee.onenet.net.WifiToggle
+import io.github.sammeeeeeeee.onenet.panel.PanelActivity
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -52,19 +54,21 @@ class InternetTileService : TileService() {
         super.onDestroy()
     }
 
-    // Interim: until OneNet's own panel lands, open the system internet panel if anything
-    // handles it, else Wi-Fi settings.
+    // Pixel's Wi-Fi toggle; the panel when Shizuku can't act. Long-press opens the panel too.
     override fun onClick() {
-        val panel = Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY)
-        val intent = if (panel.resolveActivity(packageManager) != null) panel else Intent(Settings.ACTION_WIFI_SETTINGS)
-        startActivityAndCollapse(
-            PendingIntent.getActivity(
-                this,
-                0,
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                PendingIntent.FLAG_IMMUTABLE,
-            )
-        )
+        scope.launch {
+            if (!WifiToggle.toggle(applicationContext)) {
+                startActivityAndCollapse(
+                    PendingIntent.getActivity(
+                        this@InternetTileService,
+                        0,
+                        Intent(this@InternetTileService, PanelActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        PendingIntent.FLAG_IMMUTABLE,
+                    )
+                )
+            }
+        }
     }
 
     private fun render(content: TileContent) {
@@ -81,33 +85,13 @@ class InternetTileService : TileService() {
 
 private val TileIcon.drawable: Int
     get() = when (this) {
-        is TileIcon.Wifi -> (if (noInternet) WIFI_NO_INTERNET else WIFI)[level.coerceIn(0, 4)]
-        is TileIcon.Cellular -> (if (noInternet) CELL_NO_INTERNET else CELL)[level.coerceIn(0, 4)]
+        is TileIcon.Wifi -> Icons.wifi(level, noInternet)
+        is TileIcon.Cellular -> Icons.cell(level, noInternet)
         is TileIcon.NoInternet ->
             if (networksAvailable) R.drawable.ic_qs_no_internet_available else R.drawable.ic_qs_no_internet_unavailable
         TileIcon.Ethernet -> R.drawable.ic_qs_ethernet
         TileIcon.Globe -> R.drawable.ic_qs_globe
     }
-
-private val WIFI = intArrayOf(
-    R.drawable.ic_qs_wifi_0, R.drawable.ic_qs_wifi_1, R.drawable.ic_qs_wifi_2,
-    R.drawable.ic_qs_wifi_3, R.drawable.ic_qs_wifi_4,
-)
-
-private val WIFI_NO_INTERNET = intArrayOf(
-    R.drawable.ic_qs_wifi_no_internet_0, R.drawable.ic_qs_wifi_no_internet_1, R.drawable.ic_qs_wifi_no_internet_2,
-    R.drawable.ic_qs_wifi_no_internet_3, R.drawable.ic_qs_wifi_no_internet_4,
-)
-
-private val CELL = intArrayOf(
-    R.drawable.ic_qs_cell_0, R.drawable.ic_qs_cell_1, R.drawable.ic_qs_cell_2,
-    R.drawable.ic_qs_cell_3, R.drawable.ic_qs_cell_4,
-)
-
-private val CELL_NO_INTERNET = intArrayOf(
-    R.drawable.ic_qs_cell_no_internet_0, R.drawable.ic_qs_cell_no_internet_1, R.drawable.ic_qs_cell_no_internet_2,
-    R.drawable.ic_qs_cell_no_internet_3, R.drawable.ic_qs_cell_no_internet_4,
-)
 
 private fun labels(context: Context) = with(context) {
     Labels(
@@ -122,5 +106,6 @@ private fun labels(context: Context) = with(context) {
         networksUnavailable = getString(R.string.networks_unavailable),
         airplaneMode = getString(R.string.airplane_mode),
         roaming = getString(R.string.roaming),
+        scanningForWifi = getString(R.string.scanning_for_wifi),
     )
 }

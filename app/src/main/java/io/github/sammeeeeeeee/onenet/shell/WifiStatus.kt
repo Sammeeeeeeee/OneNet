@@ -30,6 +30,8 @@ object WifiStatus {
         }
     }
 
+    fun isDisabled(statusOutput: String) = statusOutput.lineSequence().any { it.trim() == "Wifi is disabled" }
+
     fun ssidFromNetstats(output: String): String? =
         netstatsName.find(output)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
 

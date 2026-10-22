@@ -80,19 +80,27 @@ object Shell {
         context.packageManager.getLaunchIntentForPackage(SHIZUKU_PACKAGE)
 
     /** Null when Shizuku isn't ready within [timeoutMs] or the call fails. */
-    suspend fun exec(command: String, timeoutMs: Long = 3000): Result? = withTimeoutOrNull(timeoutMs) {
-        if (status.value != Status.READY) return@withTimeoutOrNull null
-        val shell = connect() ?: return@withTimeoutOrNull null
-        withContext(Dispatchers.IO) {
-            runCatching { shell.exec(command) }.getOrNull()
-        }?.let {
+    suspend fun exec(command: String, timeoutMs: Long = 3000): Result? =
+        call(timeoutMs) { it.exec(command) }?.let {
             Result(
                 it.getInt(ShellService.KEY_CODE, -1),
                 it.getString(ShellService.KEY_OUT).orEmpty(),
                 it.getString(ShellService.KEY_ERR).orEmpty(),
             )
         }
-    }
+
+    suspend fun pauseWifi(subId: Int) = call { it.pauseWifi(subId) } == true
+
+    suspend fun resumeWifi() = call { it.resumeWifi() } == true
+
+    suspend fun connectSavedNetwork(networkId: Int) = call { it.connectSavedNetwork(networkId) } == true
+
+    private suspend fun <T> call(timeoutMs: Long = 3000, block: (IShellService) -> T): T? =
+        withTimeoutOrNull(timeoutMs) {
+            if (status.value != Status.READY) return@withTimeoutOrNull null
+            val shell = connect() ?: return@withTimeoutOrNull null
+            withContext(Dispatchers.IO) { runCatching { block(shell) }.getOrNull() }
+        }
 
     private suspend fun connect(): IShellService? {
         val bound = withContext(Dispatchers.Main) {

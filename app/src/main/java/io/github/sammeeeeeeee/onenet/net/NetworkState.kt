@@ -32,4 +32,5 @@ data class NetworkState(
     val mobile: MobileState? = null,
     /** Wi-Fi networks in range while disconnected; null when unknown (no Shizuku). */
     val networksAvailable: Boolean? = null,
+    val toggle: WifiToggle.State = WifiToggle.State.NORMAL,
 )

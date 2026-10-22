@@ -10,10 +10,10 @@ Pixel's combined **Internet** tile (Android 12–16) for Samsung One UI 9: one q
 
 These are the same rules Pixels use. If your quick panel shows only one line, turn on **Network name as title** in the app.
 
-- **Tap:** opens the system internet panel for now. OneNet's own Pixel-style panel is next.
-- **Long-press:** opens Wi-Fi settings, One UI's nearest match to the Internet page Pixels open.
+- **Tap:** Pixel's Wi-Fi toggle. On Wi-Fi it pauses Wi-Fi so mobile data takes over (the radio stays on); tap again to bring Wi-Fi back. If Wi-Fi is off, it turns it on.
+- **Long-press:** Pixel's internet panel in One UI style: mobile data and Wi-Fi switches, the connected network, and nearby networks to join. Tap the carrier to switch to mobile data.
 
-Pixels on Android 17 split this tile into separate Wi-Fi and mobile data tiles. OneNet keeps the combined one.
+Behaviour follows the code Pixels run (AOSP Android 17): the toggle from the Wi-Fi tile, the panel and its wording from the internet dialog. Pixels on Android 17 split the tile into separate Wi-Fi and mobile data tiles; OneNet keeps one tile and puts the panel on long-press. Everything that changes networks needs Shizuku.
 
 ## Requirements
 

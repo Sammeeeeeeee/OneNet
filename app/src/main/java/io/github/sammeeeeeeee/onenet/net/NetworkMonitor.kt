@@ -51,8 +51,9 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
         wifiEnabled,
         broadcastFlow(Intent.ACTION_AIRPLANE_MODE_CHANGED) { airplaneModeOn() },
         mobileFlow(),
-    ) { (default, ssid, networksAvailable), wifiEnabled, airplaneMode, mobile ->
-        NetworkState(airplaneMode, wifiEnabled, default, ssid, mobile, networksAvailable)
+        WifiToggle.state,
+    ) { (default, ssid, networksAvailable), wifiEnabled, airplaneMode, mobile, toggle ->
+        NetworkState(airplaneMode, wifiEnabled, default, ssid, mobile, networksAvailable, toggle)
     }.distinctUntilChanged()
 
     private fun defaultNetworkFlow(): Flow<DefaultNetwork?> = callbackFlow {

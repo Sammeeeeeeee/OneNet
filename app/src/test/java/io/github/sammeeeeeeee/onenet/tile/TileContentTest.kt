@@ -4,6 +4,7 @@ import io.github.sammeeeeeeee.onenet.net.DefaultNetwork
 import io.github.sammeeeeeeee.onenet.net.MobileState
 import io.github.sammeeeeeeee.onenet.net.NetworkState
 import io.github.sammeeeeeeee.onenet.net.Transport
+import io.github.sammeeeeeeee.onenet.net.WifiToggle
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -13,7 +14,7 @@ class TileContentTest {
         internet = "Internet", wifi = "Wi-Fi", mobileData = "Mobile data", ethernet = "Ethernet",
         connected = "Connected", noInternet = "No internet", notConnected = "Not connected",
         networksAvailable = "Networks available", networksUnavailable = "Networks unavailable",
-        airplaneMode = "Flight mode", roaming = "Roaming",
+        airplaneMode = "Flight mode", roaming = "Roaming", scanningForWifi = "Scanning for Wi-Fi…",
     )
 
     private val wifi = DefaultNetwork(handle = 1, transport = Transport.WIFI, validated = true, wifiLevel = 3)
@@ -103,4 +104,26 @@ class TileContentTest {
             content(state, nameAsTitle = true),
         )
     }
+
+    // Tap toggle (Pixel's Wi-Fi tile)
+
+    @Test fun resumingShowsScanning() = assertEquals(
+        TileContent("Internet", "Scanning for Wi-Fi…", TileIcon.Wifi(0), active = true),
+        content(NetworkState(default = cell, mobile = vodafone, toggle = WifiToggle.State.SCANNING)),
+    )
+
+    @Test fun pausingShowsMobileStraightAway() = assertEquals(
+        TileContent("Internet", "Vodafone, 5G", TileIcon.Cellular(2), active = true),
+        content(NetworkState(default = wifi, ssid = "Home", mobile = vodafone, toggle = WifiToggle.State.PAUSING)),
+    )
+
+    @Test fun pausingWithoutMobileData() = assertEquals(
+        "Networks available",
+        content(
+            NetworkState(
+                wifiEnabled = true, default = wifi, networksAvailable = true,
+                mobile = vodafone.copy(dataEnabled = false), toggle = WifiToggle.State.PAUSING,
+            )
+        ).subtitle,
+    )
 }

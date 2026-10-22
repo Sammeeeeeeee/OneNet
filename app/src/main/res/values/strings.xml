@@ -14,8 +14,34 @@
     <string name="networks_unavailable">Networks unavailable</string>
     <string name="airplane_mode">Airplane mode</string>
     <string name="roaming">Roaming</string>
+    <string name="scanning_for_wifi">Scanning for Wi-Fi…</string>
 
-    <string name="setup_intro">One Internet tile for Wi-Fi and mobile data. Stretch it to 2× wide in the quick panel to see the network name.</string>
+    <string name="wifi_is_off">Wi-Fi is off</string>
+    <string name="tap_a_network_to_connect">Tap a network to connect</string>
+    <string name="searching_for_networks">Searching for networks…</string>
+    <string name="no_other_networks">No other networks available</string>
+    <string name="no_networks">No networks available</string>
+    <string name="mobile_data_off_summary">Mobile data won’t auto-connect</string>
+    <string name="mobile_connected_format">Connected / %1$s</string>
+    <string name="mobile_no_connection">No connection</string>
+    <string name="wifi_wont_autoconnect">Wi-Fi won’t auto-connect for now</string>
+    <string name="see_all">See all</string>
+    <string name="done">Done</string>
+    <string name="turn_off_airplane_mode">Turn off airplane mode</string>
+    <string name="mobile_data_disable_title">Turn off mobile data?</string>
+    <string name="mobile_data_disable_message">You won’t have access to data or the internet through %1$s. Internet will only be available via Wi-Fi.</string>
+    <string name="your_carrier">your carrier</string>
+    <string name="turn_off">Turn off</string>
+    <string name="connecting">Connecting…</string>
+    <string name="saved">Saved</string>
+    <string name="password">Password</string>
+    <string name="show_password">Show password</string>
+    <string name="connect">Connect</string>
+    <string name="wifi_settings">Wi-Fi settings</string>
+    <string name="panel_shizuku_unavailable">Shizuku isn’t running. Switches need it.</string>
+    <string name="panel_shizuku_permission">Allow OneNet to use Shizuku to change networks.</string>
+
+    <string name="setup_intro">One Internet tile for Wi-Fi and mobile data, as on Pixel. Tap it to switch between Wi-Fi and mobile data; hold it for networks. Stretch it to 2× wide to see the network name.</string>
     <string name="setup_shizuku">Shizuku</string>
     <string name="setup_shizuku_ready">Connected.</string>
     <string name="setup_shizuku_permission">Running. Allow OneNet to use it so the tile can show the Wi-Fi name.</string>

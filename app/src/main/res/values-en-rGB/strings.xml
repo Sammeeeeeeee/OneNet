@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="airplane_mode">Flight mode</string>
+    <string name="turn_off_airplane_mode">Turn off flight mode</string>
 </resources>

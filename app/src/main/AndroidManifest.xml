@@ -6,9 +6,6 @@
 
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
-        <intent>
-            <action android:name="android.settings.panel.action.INTERNET_CONNECTIVITY" />
-        </intent>
     </queries>
 
     <application
@@ -36,12 +33,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Long-press on the tile opens the internet panel. -->
         <activity
-            android:name=".tile.TilePreferencesActivity"
+            android:name=".panel.PanelActivity"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.NoDisplay">
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.OneNet.Panel">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
             </intent-filter>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="panel_margin">12dp</dimen>
+    <dimen name="panel_radius">26dp</dimen>
+    <dimen name="panel_card_radius">20dp</dimen>
+    <dimen name="panel_blur">40dp</dimen>
+</resources>
