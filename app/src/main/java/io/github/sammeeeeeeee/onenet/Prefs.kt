@@ -17,8 +17,8 @@ object Prefs {
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
-    /** True: network name as the title. False: Pixel wording, "Internet" with the name below. */
-    fun nameAsTitle(context: Context) = prefs(context).getBoolean(KEY_NAME_AS_TITLE, true)
+    /** False (default): Pixel layout, "Internet" with the name below. True: name on top. */
+    fun nameAsTitle(context: Context) = prefs(context).getBoolean(KEY_NAME_AS_TITLE, false)
 
     fun setNameAsTitle(context: Context, value: Boolean) =
         prefs(context).edit().putBoolean(KEY_NAME_AS_TITLE, value).apply()

@@ -9,9 +9,12 @@ object WifiStatus {
     /** Fallback for builds where `cmd wifi status` hides the name. */
     const val NETSTATS_COMMAND = "dumpsys netstats | grep -E 'iface=wlan.*(networkId|wifiNetworkKey)'"
 
+    const val SCAN_RESULTS_COMMAND = "cmd wifi list-scan-results"
+
     private const val CONNECTED_PREFIX = "Wifi is connected to "
     private const val UNKNOWN_SSID = "<unknown ssid>"
     private val netstatsName = Regex("""(?:wifiNetworkKey|networkId)="([^"]*)"""")
+    private val bssid = Regex("""^\s*(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\s""", RegexOption.MULTILINE)
 
     fun ssidFromStatus(output: String): String? {
         val raw = output.lineSequence()
@@ -29,4 +32,7 @@ object WifiStatus {
 
     fun ssidFromNetstats(output: String): String? =
         netstatsName.find(output)?.groupValues?.get(1)?.takeIf { it.isNotEmpty() }
+
+    /** True when `cmd wifi list-scan-results` lists at least one access point. */
+    fun hasScanResults(output: String) = bssid.containsMatchIn(output)
 }

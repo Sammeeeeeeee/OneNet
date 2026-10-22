@@ -6,7 +6,9 @@ import io.github.sammeeeeeeee.onenet.net.Transport
 sealed interface TileIcon {
     data class Wifi(val level: Int, val noInternet: Boolean = false) : TileIcon
     data class Cellular(val level: Int, val noInternet: Boolean = false) : TileIcon
-    data object Airplane : TileIcon
+    /** Dim globe with "?" (networks in range) or "×" (none, Wi-Fi off, flight mode). */
+    data class NoInternet(val networksAvailable: Boolean) : TileIcon
+    data object Ethernet : TileIcon
     data object Globe : TileIcon
 }
 
@@ -24,16 +26,18 @@ data class Labels(
     val ethernet: String,
     val connected: String,
     val noInternet: String,
-    val noService: String,
     val notConnected: String,
-    val off: String,
+    val networksAvailable: String,
+    val networksUnavailable: String,
     val airplaneMode: String,
     val roaming: String,
 )
 
 /**
- * Pixel's Internet tile rules (AOSP InternetTileViewModel): describe whichever network carries
- * traffic. [nameAsTitle] leads with the network name; otherwise Pixel's "Internet" + name.
+ * The combined Internet tile Pixels shipped on Android 12–16 (code in AOSP's
+ * InternetTileViewModel; Android 17 split it into Wi-Fi and mobile data tiles): "Internet"
+ * over whichever network carries traffic. [nameAsTitle] puts the network name on top instead,
+ * for quick panels that show only one line.
  */
 fun tileContent(state: NetworkState, nameAsTitle: Boolean, labels: Labels): TileContent {
     val default = state.default ?: return disconnected(state, labels)
@@ -75,7 +79,7 @@ fun tileContent(state: NetworkState, nameAsTitle: Boolean, labels: Labels): Tile
         Transport.ETHERNET -> TileContent(
             title = if (nameAsTitle) labels.ethernet else labels.internet,
             subtitle = if (nameAsTitle) labels.connected else labels.ethernet,
-            icon = TileIcon.Globe,
+            icon = TileIcon.Ethernet,
             active = true,
         )
 
@@ -84,13 +88,13 @@ fun tileContent(state: NetworkState, nameAsTitle: Boolean, labels: Labels): Tile
 }
 
 private fun disconnected(state: NetworkState, labels: Labels): TileContent {
-    val mobile = state.mobile
     val (subtitle, icon) = when {
-        state.airplaneMode && !state.wifiEnabled -> labels.airplaneMode to TileIcon.Airplane
-        state.wifiEnabled -> labels.notConnected to TileIcon.Wifi(0)
-        mobile?.dataEnabled == true ->
-            (if (mobile.inService) labels.notConnected else labels.noService) to TileIcon.Cellular(0)
-        else -> labels.off to TileIcon.Wifi(4)
+        state.airplaneMode -> labels.airplaneMode to TileIcon.NoInternet(networksAvailable = false)
+        state.networksAvailable == true -> labels.networksAvailable to TileIcon.NoInternet(networksAvailable = true)
+        // Without Shizuku there's no scan list to tell available from unavailable.
+        state.networksAvailable == null && state.wifiEnabled ->
+            labels.notConnected to TileIcon.NoInternet(networksAvailable = true)
+        else -> labels.networksUnavailable to TileIcon.NoInternet(networksAvailable = false)
     }
     return TileContent(labels.internet, subtitle, icon, active = false)
 }

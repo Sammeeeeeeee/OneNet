@@ -81,9 +81,11 @@ class InternetTileService : TileService() {
 
 private val TileIcon.drawable: Int
     get() = when (this) {
-        is TileIcon.Wifi -> if (noInternet) R.drawable.ic_qs_wifi_no_internet else WIFI[level.coerceIn(0, 4)]
-        is TileIcon.Cellular -> if (noInternet) R.drawable.ic_qs_cell_no_internet else CELL[level.coerceIn(0, 4)]
-        TileIcon.Airplane -> R.drawable.ic_qs_airplane
+        is TileIcon.Wifi -> (if (noInternet) WIFI_NO_INTERNET else WIFI)[level.coerceIn(0, 4)]
+        is TileIcon.Cellular -> (if (noInternet) CELL_NO_INTERNET else CELL)[level.coerceIn(0, 4)]
+        is TileIcon.NoInternet ->
+            if (networksAvailable) R.drawable.ic_qs_no_internet_available else R.drawable.ic_qs_no_internet_unavailable
+        TileIcon.Ethernet -> R.drawable.ic_qs_ethernet
         TileIcon.Globe -> R.drawable.ic_qs_globe
     }
 
@@ -92,9 +94,19 @@ private val WIFI = intArrayOf(
     R.drawable.ic_qs_wifi_3, R.drawable.ic_qs_wifi_4,
 )
 
+private val WIFI_NO_INTERNET = intArrayOf(
+    R.drawable.ic_qs_wifi_no_internet_0, R.drawable.ic_qs_wifi_no_internet_1, R.drawable.ic_qs_wifi_no_internet_2,
+    R.drawable.ic_qs_wifi_no_internet_3, R.drawable.ic_qs_wifi_no_internet_4,
+)
+
 private val CELL = intArrayOf(
     R.drawable.ic_qs_cell_0, R.drawable.ic_qs_cell_1, R.drawable.ic_qs_cell_2,
     R.drawable.ic_qs_cell_3, R.drawable.ic_qs_cell_4,
+)
+
+private val CELL_NO_INTERNET = intArrayOf(
+    R.drawable.ic_qs_cell_no_internet_0, R.drawable.ic_qs_cell_no_internet_1, R.drawable.ic_qs_cell_no_internet_2,
+    R.drawable.ic_qs_cell_no_internet_3, R.drawable.ic_qs_cell_no_internet_4,
 )
 
 private fun labels(context: Context) = with(context) {
@@ -105,9 +117,9 @@ private fun labels(context: Context) = with(context) {
         ethernet = getString(R.string.ethernet),
         connected = getString(R.string.connected),
         noInternet = getString(R.string.no_internet),
-        noService = getString(R.string.no_service),
         notConnected = getString(R.string.not_connected),
-        off = getString(R.string.off),
+        networksAvailable = getString(R.string.networks_available),
+        networksUnavailable = getString(R.string.networks_unavailable),
         airplaneMode = getString(R.string.airplane_mode),
         roaming = getString(R.string.roaming),
     )

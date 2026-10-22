@@ -30,4 +30,6 @@ data class NetworkState(
     val default: DefaultNetwork? = null,
     val ssid: String? = null,
     val mobile: MobileState? = null,
+    /** Wi-Fi networks in range while disconnected; null when unknown (no Shizuku). */
+    val networksAvailable: Boolean? = null,
 )

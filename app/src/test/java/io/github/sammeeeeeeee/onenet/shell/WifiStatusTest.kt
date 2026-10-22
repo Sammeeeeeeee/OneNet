@@ -1,7 +1,9 @@
 package io.github.sammeeeeeeee.onenet.shell
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WifiStatusTest {
@@ -43,4 +45,13 @@ class WifiStatusTest {
     )
 
     @Test fun netstatsEmpty() = assertNull(WifiStatus.ssidFromNetstats(""))
+
+    @Test fun scanResults() = assertTrue(
+        WifiStatus.hasScanResults(
+            "    BSSID              Frequency      RSSI           Age(sec)     SSID                                 Flags\n" +
+                "  aa:bb:cc:dd:ee:ff       5180     -61(0:-63/1:-64)     1.204    Home                              [WPA2-PSK-CCMP][ESS]\n"
+        )
+    )
+
+    @Test fun noScanResults() = assertFalse(WifiStatus.hasScanResults("No scan results\n"))
 }

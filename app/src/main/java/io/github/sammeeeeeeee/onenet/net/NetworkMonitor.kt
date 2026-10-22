@@ -43,14 +43,16 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
     private val defaultNetwork = defaultNetworkFlow()
         .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
 
+    private val wifiEnabled = broadcastFlow(WifiManager.WIFI_STATE_CHANGED_ACTION) { wifi.isWifiEnabled }
+        .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
+
     val state: Flow<NetworkState> = combine(
-        defaultNetwork,
-        ssidFlow(),
-        broadcastFlow(WifiManager.WIFI_STATE_CHANGED_ACTION) { wifi.isWifiEnabled },
+        combine(defaultNetwork, ssidFlow(), networksAvailableFlow(), ::Triple),
+        wifiEnabled,
         broadcastFlow(Intent.ACTION_AIRPLANE_MODE_CHANGED) { airplaneModeOn() },
         mobileFlow(),
-    ) { default, ssid, wifiEnabled, airplaneMode, mobile ->
-        NetworkState(airplaneMode, wifiEnabled, default, ssid, mobile)
+    ) { (default, ssid, networksAvailable), wifiEnabled, airplaneMode, mobile ->
+        NetworkState(airplaneMode, wifiEnabled, default, ssid, mobile, networksAvailable)
     }.distinctUntilChanged()
 
     private fun defaultNetworkFlow(): Flow<DefaultNetwork?> = callbackFlow {
@@ -120,6 +122,23 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
         Prefs.cacheSsid(context, handle, ssid)
         return ssid
     }
+
+    /** Pixel's "Networks available" check: any access point in range while disconnected. */
+    private fun networksAvailableFlow(): Flow<Boolean?> = combine(
+        defaultNetwork.map { it == null }.distinctUntilChanged(),
+        wifiEnabled,
+        Shell.status,
+        ::Triple,
+    )
+        .distinctUntilChanged()
+        .mapLatest { (disconnected, wifiOn, status) ->
+            when {
+                !disconnected -> null
+                !wifiOn -> false
+                status != Shell.Status.READY -> null
+                else -> Shell.exec(WifiStatus.SCAN_RESULTS_COMMAND)?.out?.let(WifiStatus::hasScanResults)
+            }
+        }
 
     /** The SIM carrying mobile data now; read once per listening session. */
     private fun mobileFlow(): Flow<MobileState?> {
