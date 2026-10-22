@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      release:
+        description: Version to release, e.g. v0.2 (needs .github/releases/<version>.md). Empty for a plain build.
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -31,14 +36,17 @@ jobs:
           name: onenet-${{ github.run_number }}
           path: app/build/outputs/apk/release/app-release.apk
 
-  # Pushing a v* tag publishes the build as a GitHub release; notes come from the tag message.
+  # Publishes the build as a GitHub release: push a v* tag, or run the workflow with a version.
+  # Notes come from .github/releases/<version>.md.
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release != ''
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v8
         with:
           name: onenet-${{ github.run_number }}
@@ -46,7 +54,8 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.release || github.ref_name }}
         run: |
-          mv app-release.apk "OneNet-$GITHUB_REF_NAME.apk"
-          gh release create "$GITHUB_REF_NAME" "OneNet-$GITHUB_REF_NAME.apk" \
-            --repo "$GITHUB_REPOSITORY" --title "OneNet $GITHUB_REF_NAME" --notes-from-tag
+          mv app-release.apk "OneNet-$VERSION.apk"
+          gh release create "$VERSION" "OneNet-$VERSION.apk" --target "$GITHUB_SHA" \
+            --title "OneNet $VERSION" --notes-file ".github/releases/$VERSION.md"
