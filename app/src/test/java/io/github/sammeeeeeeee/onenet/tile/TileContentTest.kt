@@ -15,6 +15,7 @@ class TileContentTest {
         connected = "Connected", noInternet = "No internet", notConnected = "Not connected",
         networksAvailable = "Networks available", networksUnavailable = "Networks unavailable",
         airplaneMode = "Flight mode", roaming = "Roaming", searching = "Searching…", connecting = "Connecting…",
+        off = "Off",
     )
 
     private val wifi = DefaultNetwork(handle = 1, transport = Transport.WIFI, validated = true, wifiLevel = 3)
@@ -23,25 +24,25 @@ class TileContentTest {
 
     private fun content(state: NetworkState, nameAsTitle: Boolean = false) = tileContent(state, nameAsTitle, labels)
 
-    // Pixel layout (default)
+    // One UI layout (default): the name of One UI's own tile, then the details
 
     @Test fun wifi() = assertEquals(
-        TileContent("Internet", "Home", TileIcon.Wifi(3), active = true),
+        TileContent("Wi-Fi", "Home", TileIcon.Wifi(3), active = true),
         content(NetworkState(wifiEnabled = true, default = wifi, ssid = "Home", mobile = vodafone)),
     )
 
     @Test fun wifiNoInternetKeepsNameAndLevel() = assertEquals(
-        TileContent("Internet", "Home", TileIcon.Wifi(3, noInternet = true), active = true),
+        TileContent("Wi-Fi", "Home", TileIcon.Wifi(3, noInternet = true), active = true),
         content(NetworkState(wifiEnabled = true, default = wifi.copy(validated = false), ssid = "Home")),
     )
 
     @Test fun wifiWithoutShizuku() = assertEquals(
-        TileContent("Internet", "Wi-Fi", TileIcon.Wifi(3), active = true),
+        TileContent("Wi-Fi", "Connected", TileIcon.Wifi(3), active = true),
         content(NetworkState(wifiEnabled = true, default = wifi)),
     )
 
     @Test fun mobile() = assertEquals(
-        TileContent("Internet", "Vodafone, 5G", TileIcon.Cellular(2), active = true),
+        TileContent("Mobile data", "Vodafone, 5G", TileIcon.MobileData(), active = true),
         content(NetworkState(default = cell, mobile = vodafone)),
     )
 
@@ -51,37 +52,37 @@ class TileContentTest {
     )
 
     @Test fun mobileWithoutDetails() = assertEquals(
-        TileContent("Internet", "Mobile data", TileIcon.Cellular(0), active = true),
+        TileContent("Mobile data", "Connected", TileIcon.MobileData(), active = true),
         content(NetworkState(default = cell, mobile = MobileState())),
     )
 
     @Test fun ethernet() = assertEquals(
-        TileContent("Internet", "Ethernet", TileIcon.Ethernet, active = true),
+        TileContent("Ethernet", "Connected", TileIcon.Ethernet, active = true),
         content(NetworkState(default = DefaultNetwork(3, Transport.ETHERNET, validated = true))),
     )
 
     @Test fun flightModeWinsWhileDisconnected() = assertEquals(
-        TileContent("Internet", "Flight mode", TileIcon.NoInternet(false), active = false),
+        TileContent("Wi-Fi", "Flight mode", TileIcon.NoInternet(false), active = false),
         content(NetworkState(airplaneMode = true, wifiEnabled = true, networksAvailable = true)),
     )
 
     @Test fun networksAvailable() = assertEquals(
-        TileContent("Internet", "Networks available", TileIcon.NoInternet(true), active = false),
+        TileContent("Wi-Fi", "Networks available", TileIcon.NoInternet(true), active = false),
         content(NetworkState(wifiEnabled = true, networksAvailable = true)),
     )
 
     @Test fun networksUnavailable() = assertEquals(
-        TileContent("Internet", "Networks unavailable", TileIcon.NoInternet(false), active = false),
+        TileContent("Wi-Fi", "Networks unavailable", TileIcon.NoInternet(false), active = false),
         content(NetworkState(wifiEnabled = true, networksAvailable = false)),
     )
 
-    @Test fun everythingOffIsUnavailable() = assertEquals(
-        TileContent("Internet", "Networks unavailable", TileIcon.NoInternet(false), active = false),
+    @Test fun everythingOff() = assertEquals(
+        TileContent("Wi-Fi", "Off", TileIcon.NoInternet(false), active = false),
         content(NetworkState(networksAvailable = false, mobile = vodafone.copy(dataEnabled = false))),
     )
 
     @Test fun scanListUnknown() = assertEquals(
-        TileContent("Internet", "Not connected", TileIcon.NoInternet(true), active = false),
+        TileContent("Wi-Fi", "Not connected", TileIcon.NoInternet(true), active = false),
         content(NetworkState(wifiEnabled = true)),
     )
 
@@ -100,7 +101,7 @@ class TileContentTest {
     @Test fun mobileNameOnTop() {
         val state = NetworkState(default = cell, mobile = vodafone.copy(roaming = true))
         assertEquals(
-            TileContent("Vodafone", "5G · Roaming", TileIcon.Cellular(2), active = true),
+            TileContent("Vodafone", "5G · Roaming", TileIcon.MobileData(), active = true),
             content(state, nameAsTitle = true),
         )
     }
@@ -108,19 +109,30 @@ class TileContentTest {
     // Tap toggle (Pixel's Wi-Fi tile)
 
     @Test fun resumingSearches() = assertEquals(
-        TileContent("Internet", "Searching…", TileIcon.WifiSearching, active = true),
+        TileContent("Wi-Fi", "Searching…", TileIcon.WifiSearching, active = true),
         content(NetworkState(default = cell, mobile = vodafone, toggle = WifiToggle.State.SCANNING)),
     )
 
     // Joined but not yet carrying traffic: name it instead of flicking back to mobile.
     @Test fun resumingNamesTheNetworkWhileConnecting() = assertEquals(
-        TileContent("Internet", "Home", TileIcon.WifiSearching, active = true),
+        TileContent("Wi-Fi", "Home", TileIcon.WifiSearching, active = true),
         content(
             NetworkState(
                 default = cell, mobile = vodafone, ssid = "Home", wifiConnected = true,
                 toggle = WifiToggle.State.SCANNING,
             )
         ),
+    )
+
+    // Associated (the status bar shows Wi-Fi) before Android has the network: not "Searching…".
+    @Test fun resumingNamesTheNetworkOnceAssociated() = assertEquals(
+        TileContent("Wi-Fi", "Home", TileIcon.WifiSearching, active = true),
+        content(NetworkState(default = cell, mobile = vodafone, joining = "Home", toggle = WifiToggle.State.SCANNING)),
+    )
+
+    @Test fun resumingAssociatedNameOnTop() = assertEquals(
+        TileContent("Home", "Connecting…", TileIcon.WifiSearching, active = true),
+        content(NetworkState(default = cell, joining = "Home", toggle = WifiToggle.State.SCANNING), nameAsTitle = true),
     )
 
     @Test fun resumingNameOnTop() = assertEquals(
@@ -132,12 +144,12 @@ class TileContentTest {
     )
 
     @Test fun scanningEndsOnceWifiCarriesTraffic() = assertEquals(
-        TileContent("Internet", "Home", TileIcon.Wifi(3), active = true),
+        TileContent("Wi-Fi", "Home", TileIcon.Wifi(3), active = true),
         content(NetworkState(default = wifi, ssid = "Home", toggle = WifiToggle.State.SCANNING)),
     )
 
     @Test fun pausingShowsMobileStraightAway() = assertEquals(
-        TileContent("Internet", "Vodafone, 5G", TileIcon.Cellular(2), active = true),
+        TileContent("Mobile data", "Vodafone, 5G", TileIcon.Handover(TileIcon.MobileData()), active = true),
         content(NetworkState(default = wifi, ssid = "Home", mobile = vodafone, toggle = WifiToggle.State.PAUSING)),
     )
 

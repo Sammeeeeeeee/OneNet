@@ -1,14 +1,14 @@
 # OneNet
 
-Pixel's combined **Internet** tile (Android 12–16) for Samsung One UI 9: one quick-panel tile for Wi-Fi and mobile data, drawn in One UI's style. Stretch it to 2× wide to see which network you're on.
+Pixel's combined **Internet** tile (Android 12–16) for Samsung One UI 9: one quick-panel tile for Wi-Fi and mobile data, in One UI's style and words. Stretch it to 2× wide to see which network you're on.
 
 | Connected via | Tile shows |
 | --- | --- |
-| Wi-Fi | Internet · *Wi-Fi name* |
-| Mobile data | Internet · *Carrier, 5G* |
-| Nothing | Internet · Networks available / Networks unavailable / Flight mode |
+| Wi-Fi | Wi-Fi · *Wi-Fi name* |
+| Mobile data | Mobile data · *Carrier, 5G* |
+| Nothing | Wi-Fi · Networks available / Networks unavailable / Off / Flight mode |
 
-These are the same rules Pixels use. If your quick panel shows only one line, turn on **Network name as title** in the app.
+Pixel's rules, One UI's tile names. If your quick panel shows only one line, turn on **Network name as title** in the app.
 
 - **Tap:** Pixel's Wi-Fi toggle. On Wi-Fi it pauses Wi-Fi so mobile data takes over (the radio stays on). Tap again and it searches, names the network as it connects, then shows it in use. If Wi-Fi is off, tap turns it on.
 - **Long-press:** Pixel's internet panel: mobile data and Wi-Fi switches, the connected network, and nearby networks to join. Tap the carrier to switch to mobile data.

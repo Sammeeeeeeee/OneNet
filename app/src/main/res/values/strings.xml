@@ -15,6 +15,7 @@
     <string name="airplane_mode">Airplane mode</string>
     <string name="roaming">Roaming</string>
     <string name="searching">Searching…</string>
+    <string name="off">Off</string>
 
     <string name="wifi_is_off">Wi-Fi is off</string>
     <string name="tap_a_network_to_connect">Tap a network to connect</string>
@@ -54,5 +55,5 @@
     <string name="setup_tile_already_added">Already in the quick panel</string>
     <string name="setup_tile_failed">Add it from the quick panel: Edit, then Add a control.</string>
     <string name="setup_name_as_title">Network name as title</string>
-    <string name="setup_name_as_title_summary">For quick panels that show only one line of text. Off: Pixel layout, “Internet” with the network name below.</string>
+    <string name="setup_name_as_title_summary">For quick panels that show only one line of text. Off: as One UI’s own tiles, “Wi-Fi” or “Mobile data” with the network name below.</string>
 </resources>

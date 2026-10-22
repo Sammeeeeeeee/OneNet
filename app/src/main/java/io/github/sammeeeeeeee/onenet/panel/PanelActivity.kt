@@ -235,7 +235,7 @@ class PanelActivity : Activity() {
 
     private fun renderMobile(mobile: MobileState, mobileActive: Boolean, ready: Boolean) {
         val noData = !mobile.dataEnabled || !mobile.inService
-        mobileIcon.setImageResource(Icons.cell(mobile.level, noData))
+        mobileIcon.setImageResource(Icons.data(off = noData))
         mobileTitle.text = mobile.carrier ?: getString(R.string.mobile_data)
         val summary = PanelText.mobileSummary(mobile, mobileActive, labels)
         mobileSummary.text = summary

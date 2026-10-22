@@ -10,6 +10,7 @@ import io.github.sammeeeeeeee.onenet.shell.WifiStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +29,18 @@ object WifiToggle {
     enum class State { NORMAL, PAUSING, SCANNING }
 
     private const val SETTLE_TIMEOUT_MS = 10_000L
+    private const val JOIN_POLL_MS = 700L
 
     private val scope = MainScope()
     private var settling: Job? = null
 
     private val _state = MutableStateFlow(State.NORMAL)
     val state: StateFlow<State> = _state.asStateFlow()
+
+    private val _joining = MutableStateFlow<String?>(null)
+
+    /** While [State.SCANNING]: the network Wi-Fi has associated with, before Android routes to it. */
+    val joining: StateFlow<String?> = _joining.asStateFlow()
 
     /** False when Shizuku can't act; callers fall back to the panel. */
     suspend fun toggle(context: Context): Boolean {
@@ -73,11 +80,24 @@ object WifiToggle {
     private fun settle(context: Context, wifiDefault: Boolean) {
         val connectivity = context.applicationContext.getSystemService(ConnectivityManager::class.java)
         settling?.cancel()
+        _joining.value = null
         settling = scope.launch {
+            val polling = if (wifiDefault) launch { pollJoining() } else null
             withTimeoutOrNull(SETTLE_TIMEOUT_MS) {
                 wifiIsDefaultFlow(connectivity).first { it == wifiDefault }
             }
+            polling?.cancel()
+            _joining.value = null
             _state.value = State.NORMAL
+        }
+    }
+
+    // The status bar shows Wi-Fi as soon as it associates, a second or two before Android has
+    // an IP for it and network callbacks fire. The shell sees that moment.
+    private suspend fun pollJoining() {
+        while (true) {
+            Shell.exec(WifiStatus.STATUS_COMMAND)?.out?.let { _joining.value = WifiStatus.ssidFromStatus(it) }
+            delay(JOIN_POLL_MS)
         }
     }
 

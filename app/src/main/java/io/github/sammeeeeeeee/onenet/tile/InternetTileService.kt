@@ -29,7 +29,8 @@ class InternetTileService : TileService() {
         Log.w("InternetTileService", "Tile update failed", e)
     }
     private var listening: Job? = null
-    private var searching: Job? = null
+    private var iconAnimation: Job? = null
+    private var animatedIcon: TileIcon? = null
 
     override fun onStartListening() {
         super.onStartListening()
@@ -48,7 +49,8 @@ class InternetTileService : TileService() {
     override fun onStopListening() {
         listening?.cancel()
         listening = null
-        searching?.cancel()
+        iconAnimation?.cancel()
+        animatedIcon = null
         super.onStopListening()
     }
 
@@ -78,49 +80,67 @@ class InternetTileService : TileService() {
         val tile = qsTile ?: return
         tile.label = content.title
         tile.subtitle = content.subtitle
-        if (content.icon == TileIcon.WifiSearching) {
-            if (searching?.isActive != true) {
-                tile.icon = Icon.createWithResource(this, content.icon.drawable)
-                searching = scope.launch { animateSearching() }
-            }
-        } else {
-            searching?.cancel()
-            tile.icon = Icon.createWithResource(this, content.icon.drawable)
-        }
+        setIcon(tile, content.icon)
         tile.state = if (content.active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.contentDescription = listOfNotNull(content.title, content.subtitle).joinToString(", ")
         tile.stateDescription = content.subtitle
         tile.updateTile()
     }
 
-    // SystemUI doesn't run animated icons for app tiles, so step through the frames here.
-    private suspend fun animateSearching() {
-        var frame = 0
-        while (true) {
-            delay(SEARCH_FRAME_MS)
-            frame = (frame + 1) % SEARCH_FRAMES.size
+    // SystemUI doesn't run animated icons for app tiles, so step through frames here.
+    private fun setIcon(tile: Tile, icon: TileIcon) {
+        if (icon == TileIcon.WifiSearching || icon is TileIcon.Handover) {
+            if (icon == animatedIcon) return
+            iconAnimation?.cancel()
+            animatedIcon = icon
+            iconAnimation = scope.launch { animate(icon) }
+        } else {
+            iconAnimation?.cancel()
+            animatedIcon = null
+            tile.icon = Icon.createWithResource(this, icon.drawable)
+        }
+    }
+
+    private suspend fun animate(icon: TileIcon) {
+        fun show(drawable: Int) {
             qsTile?.run {
-                icon = Icon.createWithResource(this@InternetTileService, Icons.wifi(SEARCH_FRAMES[frame]))
+                this.icon = Icon.createWithResource(this@InternetTileService, drawable)
                 updateTile()
+            }
+        }
+        if (icon is TileIcon.Handover) {
+            for (drawable in HANDOVER_FRAMES) {
+                show(drawable)
+                delay(HANDOVER_FRAME_MS)
+            }
+            show(icon.to.drawable)
+        } else {
+            var frame = 0
+            while (true) {
+                show(Icons.WIFI_SEARCH[frame])
+                frame = (frame + 1) % Icons.WIFI_SEARCH.size
+                delay(SEARCH_FRAME_MS)
             }
         }
     }
 
     private companion object {
-        val SEARCH_FRAMES = intArrayOf(SEARCH_START_LEVEL, 2, 3, 4)
-        const val SEARCH_FRAME_MS = 300L
+        val HANDOVER_FRAMES = intArrayOf(Icons.wifi(3), Icons.wifi(2), Icons.wifi(1), Icons.wifi(0))
+        const val HANDOVER_FRAME_MS = 90L
+        const val SEARCH_FRAME_MS = 220L
     }
 }
 
 private val TileIcon.drawable: Int
     get() = when (this) {
         is TileIcon.Wifi -> Icons.wifi(level, noInternet)
-        is TileIcon.Cellular -> Icons.cell(level, noInternet)
+        is TileIcon.MobileData -> Icons.data(noInternet)
         is TileIcon.NoInternet ->
             if (networksAvailable) R.drawable.ic_qs_no_internet_available else R.drawable.ic_qs_no_internet_unavailable
         TileIcon.Ethernet -> R.drawable.ic_qs_ethernet
         TileIcon.Globe -> R.drawable.ic_qs_globe
-        TileIcon.WifiSearching -> Icons.wifi(SEARCH_START_LEVEL)
+        TileIcon.WifiSearching -> Icons.WIFI_SEARCH[0]
+        is TileIcon.Handover -> to.drawable
     }
 
 private fun labels(context: Context) = with(context) {
@@ -138,7 +158,6 @@ private fun labels(context: Context) = with(context) {
         roaming = getString(R.string.roaming),
         searching = getString(R.string.searching),
         connecting = getString(R.string.connecting),
+        off = getString(R.string.off),
     )
 }
-
-private const val SEARCH_START_LEVEL = 1

@@ -10,6 +10,8 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.telephony.ServiceState
 import android.telephony.SignalStrength
@@ -21,7 +23,10 @@ import io.github.sammeeeeeeee.onenet.Prefs
 import io.github.sammeeeeeeee.onenet.shell.Shell
 import io.github.sammeeeeeeee.onenet.shell.WifiStatus
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
@@ -29,11 +34,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Live [NetworkState] while collected. Sharing stops with [scope]. */
+/**
+ * Live [NetworkState] while collected. Sharing stops with [scope]. The first state arrives
+ * within moments: the tile shows its last state until then, which may be mid-toggle.
+ */
 class NetworkMonitor(context: Context, scope: CoroutineScope) {
 
     private val context = context.applicationContext
@@ -51,12 +60,17 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
     private val wifiConnection = wifiConnectionFlow()
         .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
 
-    private data class WifiPart(val connected: Boolean, val ssid: String?, val networksAvailable: Boolean?)
+    private data class WifiPart(
+        val connected: Boolean,
+        val ssid: String?,
+        val networksAvailable: Boolean?,
+        val joining: String?,
+    )
 
     val state: Flow<NetworkState> = combine(
         defaultNetwork,
-        combine(wifiConnection, ssidFlow(), networksAvailableFlow()) { handle, ssid, networksAvailable ->
-            WifiPart(handle != null, ssid, networksAvailable)
+        combine(wifiConnection, ssidFlow(), networksAvailableFlow(), WifiToggle.joining) { handle, ssid, available, joining ->
+            WifiPart(handle != null, ssid, available, joining)
         },
         wifiEnabled,
         combine(broadcastFlow(Intent.ACTION_AIRPLANE_MODE_CHANGED) { airplaneModeOn() }, mobileFlow(), ::Pair),
@@ -64,15 +78,19 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
     ) { default, wifiPart, wifiEnabled, (airplaneMode, mobile), toggle ->
         NetworkState(
             airplaneMode, wifiEnabled, default, wifiPart.ssid, mobile, wifiPart.networksAvailable, toggle,
-            wifiPart.connected,
+            wifiPart.connected, wifiPart.joining,
         )
     }.distinctUntilChanged()
 
+    // Android calls back at once when there is a default network. activeNetwork can't seed it:
+    // it reads null while the app's network access is blocked in the background.
     private fun defaultNetworkFlow(): Flow<DefaultNetwork?> = callbackFlow {
+        var heard = false
         val callback = object : ConnectivityManager.NetworkCallback() {
             private var current: Network? = null
 
             override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                heard = true
                 current = network
                 trySend(defaultNetwork(network, caps))
             }
@@ -84,10 +102,11 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
                 }
             }
         }
-        trySend(connectivity.activeNetwork?.let { network ->
-            connectivity.getNetworkCapabilities(network)?.let { defaultNetwork(network, it) }
-        })
-        connectivity.registerDefaultNetworkCallback(callback)
+        connectivity.registerDefaultNetworkCallback(callback, Handler(Looper.getMainLooper()))
+        launch {
+            delay(NO_NETWORK_GRACE_MS)
+            if (!heard) trySend(null)
+        }
         awaitClose { connectivity.unregisterNetworkCallback(callback) }
     }.distinctUntilChanged()
 
@@ -146,11 +165,22 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
      */
     private fun ssidFlow(): Flow<String?> = combine(wifiConnection, Shell.status) { handle, status -> handle to status }
         .distinctUntilChanged()
-        .mapLatest { (handle, status) -> handle?.let { resolveSsid(it, status) } }
+        .transformLatest { (handle, status) ->
+            val cached = handle?.let { Prefs.cachedSsid(context, it) }
+            if (handle == null || cached != null || status != Shell.Status.READY) {
+                emit(cached)
+                return@transformLatest
+            }
+            // A new connection: wait briefly for the name so the tile doesn't flash "Wi-Fi",
+            // but never hold the tile on Shizuku.
+            coroutineScope {
+                val name = async { resolveSsid(handle) }
+                emit(withTimeoutOrNull(SSID_GRACE_MS) { name.await() } ?: WifiToggle.joining.value)
+                emit(name.await())
+            }
+        }
 
-    private suspend fun resolveSsid(handle: Long, status: Shell.Status): String? {
-        Prefs.cachedSsid(context, handle)?.let { return it }
-        if (status != Shell.Status.READY) return null
+    private suspend fun resolveSsid(handle: Long): String? {
         val ssid = withTimeoutOrNull(SSID_TIMEOUT_MS) {
             Shell.exec(WifiStatus.STATUS_COMMAND)?.out?.let(WifiStatus::ssidFromStatus)
                 ?: Shell.exec(WifiStatus.NETSTATS_COMMAND)?.out?.let(WifiStatus::ssidFromNetstats)
@@ -167,12 +197,18 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
         ::Triple,
     )
         .distinctUntilChanged()
-        .mapLatest { (disconnected, wifiOn, status) ->
+        .transformLatest { (disconnected, wifiOn, status) ->
             when {
-                !disconnected -> null
-                !wifiOn -> false
-                status != Shell.Status.READY -> null
-                else -> Shell.exec(WifiStatus.SCAN_RESULTS_COMMAND)?.out?.let(WifiStatus::hasScanResults)
+                !disconnected -> emit(null)
+                !wifiOn -> emit(false)
+                status != Shell.Status.READY -> emit(null)
+                else -> {
+                    emit(lastNetworksAvailable)
+                    Shell.exec(WifiStatus.SCAN_RESULTS_COMMAND)?.out?.let(WifiStatus::hasScanResults)?.let {
+                        lastNetworksAvailable = it
+                        emit(it)
+                    }
+                }
             }
         }
 
@@ -256,6 +292,11 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
 
     private companion object {
         const val INVALID_RSSI = -127
+        const val NO_NETWORK_GRACE_MS = 500L
+        const val SSID_GRACE_MS = 400L
         const val SSID_TIMEOUT_MS = 2500L
+
+        /** Last scan verdict, shown while a fresh one runs. */
+        var lastNetworksAvailable: Boolean? = null
     }
 }

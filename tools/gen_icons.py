@@ -2,8 +2,9 @@
 
 Usage: python3 tools/gen_icons.py app/src/main/res/drawable [svg-preview-dir]
 
-Geometry traced from One UI 9's own Wi-Fi tile glyph: three round-capped arcs
-about the dot, half-angle ~46deg, stroke 2/24, dot r 1.4/24. States follow
+Geometry fitted to One UI 9's own Wi-Fi tile glyph, side by side in the same quick
+panel: three round-capped arcs about the dot, half-angle ~47.5deg, stroke 2.2/24,
+dot r 1.4/24. States follow
 Pixel's Internet tile (level icons, "!" for no internet, globe ?/x when offline).
 """
 import math, os, sys
@@ -16,8 +17,10 @@ DIM = 0.3
 f = lambda v: f"{v:.2f}".rstrip('0').rstrip('.')
 
 # Wi-Fi
-CX, CY, DOT_R, STROKE, HALF = 12.0, 18.45, 1.4, 2.0, math.radians(46)
-RADII = (4.8, 9.0, 13.2)
+CX, CY, DOT_R, WIFI_STROKE, HALF = 12.0, 18.8, 1.4, 2.2, math.radians(47.5)
+STROKE, DATA_STROKE = 2.0, 1.9
+WIDTHS = {'stroke': STROKE, 'stroke-wifi': WIFI_STROKE, 'stroke-data': DATA_STROKE}
+RADII = (4.9, 9.35, 13.7)
 
 def arc(r):
     dx, dy = r * math.sin(HALF), r * math.cos(HALF)
@@ -39,26 +42,30 @@ def bang(x, top, bottom, dot_y):
 def wifi(level, no_internet=False):
     items = []
     for i, r in enumerate(RADII):
-        items.append(('stroke', arc(r), 1.0 if level >= i + 2 else DIM))
+        items.append(('stroke-wifi', arc(r), 1.0 if level >= i + 2 else DIM))
     items.append(('fill', circle(CX, CY, DOT_R), 1.0 if level >= 1 else DIM))
     if no_internet:
         s, d = bang(21.4, 13.2, 16.2, 19.1)
         items += [('stroke', s, 1.0), ('fill', d, 1.0)]
     return items
 
-# Cellular: four rounded bars sharing the Wi-Fi glyph's baseline.
-BASE, BW, GAP, R = 19.85, 3.2, 2.0, 1.4
-HEIGHTS = (4.4, 8.0, 11.6, 15.2)
-X0 = 12 - (4 * BW + 3 * GAP) / 2
+# Mobile data: One UI 9's down/up arrows, traced from its own quick panel tile.
+DATA = ("M8.18,5.5V18.6M4.48,14.9L8.18,18.6L11.88,14.9"
+        "M16.23,18.6V5.5M12.53,9.2L16.23,5.5L19.93,9.2")
 
-def cell(level, no_internet=False):
-    items = []
-    for i, h in enumerate(HEIGHTS):
-        items.append(('fill', rrect(X0 + i * (BW + GAP), BASE - h, BW, h, R), 1.0 if level >= i + 1 else DIM))
+def data(no_internet=False, dim=False):
+    items = [('stroke-data', DATA, 0.4 if dim else 1.0)]
     if no_internet:
-        s, d = bang(X0 + BW / 2, 5.0, 9.4, 12.4)
-        items += [('stroke', s, 1.0), ('fill', d, 1.0)]
+        s_, d_ = bang(21.3, 12.4, 15.6, 18.6)
+        items += [('stroke', s_, 1.0), ('fill', d_, 1.0)]
     return items
+
+# Searching: arcs light up outwards and fade, on a loop (Pixel's ic_wifi_connecting, in steps).
+SEARCH_WAVE = [(1, DIM, DIM), (1, 1, DIM), (1, 1, 1), (DIM, 1, 1), (DIM, DIM, 1), (DIM, DIM, DIM)]
+
+def wifi_search(frame):
+    alphas = SEARCH_WAVE[frame]
+    return [('stroke-wifi', arc(r), a) for r, a in zip(RADII, alphas)] + [('fill', circle(CX, CY, DOT_R), 1.0)]
 
 ETHERNET = [('fill', "M7.77,6.76L6.23,5.48 0.82,12l5.41,6.52 1.54,-1.28L3.42,12l4.35,-5.24zM7,13h2v-2H7v2zm10,-2h-2v2h2v-2zm-6,2h2v-2h-2v2zm6.77,-7.52l-1.54,1.28L20.58,12l-4.35,5.24 1.54,1.28L23.18,12l-5.41,-6.52z", 1.0)]
 
@@ -105,8 +112,9 @@ def vector_xml(items, size=24, viewport=24, group=None):
             attrs.append('android:fillColor="#FFFFFFFF"')
             if a < 1: attrs.append(f'android:fillAlpha="{a}"')
         else:
+            width = WIDTHS[kind]
             attrs += ['android:fillColor="#00000000"', 'android:strokeColor="#FFFFFFFF"',
-                      f'android:strokeWidth="{f(STROKE)}"', 'android:strokeLineCap="round"', 'android:strokeLineJoin="round"']
+                      f'android:strokeWidth="{f(width)}"', 'android:strokeLineCap="round"', 'android:strokeLineJoin="round"']
             if a < 1: attrs.append(f'android:strokeAlpha="{a}"')
         lines.append(f'{indent}<path\n' + '\n'.join(f'{indent}    {x}' for x in attrs) + ' />')
     if group: lines.append('    </group>')
@@ -125,7 +133,8 @@ def svg(items, color):
         if kind == 'fill':
             out.append(f'<path d="{d}" fill="{color}" fill-opacity="{a}"/>')
         else:
-            out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-opacity="{a}" stroke-width="{STROKE}" stroke-linecap="round" stroke-linejoin="round"/>')
+            width = WIDTHS[kind]
+            out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-opacity="{a}" stroke-width="{width}" stroke-linecap="round" stroke-linejoin="round"/>')
     out.append('</svg>')
     return ''.join(out)
 
@@ -133,8 +142,11 @@ icons = {}
 for l in range(5):
     icons[f'ic_qs_wifi_{l}'] = wifi(l)
     icons[f'ic_qs_wifi_no_internet_{l}'] = wifi(l, True)
-    icons[f'ic_qs_cell_{l}'] = cell(l)
-    icons[f'ic_qs_cell_no_internet_{l}'] = cell(l, True)
+for frame in range(len(SEARCH_WAVE)):
+    icons[f'ic_qs_wifi_search_{frame}'] = wifi_search(frame)
+icons['ic_qs_data'] = data()
+icons['ic_qs_data_no_internet'] = data(no_internet=True)
+icons['ic_qs_data_off'] = data(dim=True)
 icons['ic_qs_no_internet_available'] = no_internet(True)
 icons['ic_qs_no_internet_unavailable'] = no_internet(False)
 icons['ic_qs_ethernet'] = ETHERNET
@@ -152,4 +164,27 @@ for name, items in icons.items():
 scale = 2.3
 open(f'{OUT_RES}/ic_launcher_foreground.xml', 'w').write(vector_xml(
     wifi(4), size=108, viewport=108,
-    group=f'android:scaleX="{scale}" android:scaleY="{scale}" android:translateX="{f(54 - 12 * scale)}" android:translateY="{f(54 - 12.05 * scale)}"'))
+    group=f'android:scaleX="{scale}" android:scaleY="{scale}" android:translateX="{f(54 - 12 * scale)}" android:translateY="{f(54 - 12.1 * scale)}"'))
+
+# Launcher background: One UI blue, lit from the top left.
+open(f'{OUT_RES}/ic_launcher_background.xml', 'w').write('''<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="18"
+                android:startY="10"
+                android:endX="90"
+                android:endY="98"
+                android:startColor="#FF5B9BFF"
+                android:endColor="#FF2557E8" />
+        </aapt:attr>
+    </path>
+</vector>
+''')
