@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#3E7BFA</color>
-    <!-- One UI light surfaces; slightly translucent over the blurred backdrop. -->
-    <color name="panel_background">#F2F4F4F6</color>
-    <color name="panel_card">#FFFFFFFF</color>
-    <color name="panel_divider">#1A000000</color>
+    <!-- Quick panel detail view: white text on frosted glass, light and dark mode alike. -->
+    <color name="panel_text">#FFFFFFFF</color>
+    <color name="panel_text_secondary">#B3FFFFFF</color>
+    <color name="panel_card">#14000000</color>
+    <color name="panel_card_stroke">#1FFFFFFF</color>
+    <color name="panel_divider">#33FFFFFF</color>
+    <color name="panel_ripple">#26FFFFFF</color>
 </resources>

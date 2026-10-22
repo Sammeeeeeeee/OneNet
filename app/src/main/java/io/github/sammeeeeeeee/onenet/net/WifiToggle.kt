@@ -2,16 +2,21 @@ package io.github.sammeeeeeeee.onenet.net
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.telephony.SubscriptionManager
 import io.github.sammeeeeeeee.onenet.shell.Shell
 import io.github.sammeeeeeeee.onenet.shell.WifiStatus
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -50,14 +55,14 @@ object WifiToggle {
         if (!Shell.pauseWifi(SubscriptionManager.getDefaultDataSubscriptionId())) {
             Shell.exec("cmd wifi set-wifi-enabled disabled")
         }
-        settle(context) { !wifiIsDefault(it) }
+        settle(context, wifiConnected = false)
     }
 
     suspend fun resume(context: Context) {
         _state.value = State.SCANNING
         Shell.resumeWifi()
         Shell.exec("cmd wifi start-scan")
-        settle(context) { wifiIsDefault(it) }
+        settle(context, wifiConnected = true)
     }
 
     suspend fun enable(context: Context) {
@@ -65,20 +70,41 @@ object WifiToggle {
         resume(context)
     }
 
-    private fun settle(context: Context, done: (Context) -> Boolean) {
-        val app = context.applicationContext
+    /** Holds the transitional state until Wi-Fi connects (or drops), at most 10 s. */
+    private fun settle(context: Context, wifiConnected: Boolean) {
+        val connectivity = context.applicationContext.getSystemService(ConnectivityManager::class.java)
         settling?.cancel()
         settling = scope.launch {
             withTimeoutOrNull(SETTLE_TIMEOUT_MS) {
-                while (!done(app)) delay(250)
+                wifiConnectedFlow(connectivity).first { it == wifiConnected }
             }
             _state.value = State.NORMAL
         }
     }
 
-    private fun wifiIsDefault(context: Context): Boolean {
-        val connectivity = context.getSystemService(ConnectivityManager::class.java)
-        return connectivity.getNetworkCapabilities(connectivity.activeNetwork)
-            ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+    // Callbacks, not activeNetwork: Android hides the active network from apps whose network
+    // access is blocked in the background, which left the tile stuck on "Scanning for Wi-Fi…".
+    private fun wifiConnectedFlow(connectivity: ConnectivityManager): Flow<Boolean> = callbackFlow {
+        val connected = mutableSetOf<Network>()
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                connected += network
+                trySend(true)
+            }
+
+            override fun onLost(network: Network) {
+                connected -= network
+                trySend(connected.isNotEmpty())
+            }
+        }
+        @Suppress("DEPRECATION")
+        trySend(connectivity.allNetworks.any {
+            connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        })
+        connectivity.registerNetworkCallback(
+            NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build(),
+            callback,
+        )
+        awaitClose { connectivity.unregisterNetworkCallback(callback) }
     }
 }

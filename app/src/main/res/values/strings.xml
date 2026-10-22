@@ -25,7 +25,7 @@
     <string name="mobile_connected_format">Connected / %1$s</string>
     <string name="mobile_no_connection">No connection</string>
     <string name="wifi_wont_autoconnect">Wi-Fi won’t auto-connect for now</string>
-    <string name="see_all">See all</string>
+    <string name="details">Details</string>
     <string name="done">Done</string>
     <string name="turn_off_airplane_mode">Turn off airplane mode</string>
     <string name="mobile_data_disable_title">Turn off mobile data?</string>

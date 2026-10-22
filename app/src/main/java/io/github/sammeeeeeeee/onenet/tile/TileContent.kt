@@ -45,7 +45,7 @@ data class Labels(
 fun tileContent(state: NetworkState, nameAsTitle: Boolean, labels: Labels): TileContent {
     // Mid-toggle, show where the tap is heading, as Pixel's tile does.
     when (state.toggle) {
-        WifiToggle.State.SCANNING -> return TileContent(
+        WifiToggle.State.SCANNING -> if (state.default?.transport != Transport.WIFI) return TileContent(
             title = if (nameAsTitle) labels.wifi else labels.internet,
             subtitle = labels.scanningForWifi,
             icon = TileIcon.Wifi(0),

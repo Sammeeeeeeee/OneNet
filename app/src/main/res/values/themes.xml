@@ -8,11 +8,12 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.25</item>
+        <item name="android:backgroundDimEnabled">false</item>
         <item name="android:windowBlurBehindEnabled">true</item>
         <item name="android:windowBlurBehindRadius">@dimen/panel_blur</item>
         <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <style name="SectionTitle">
@@ -25,51 +26,74 @@
     </style>
 
     <style name="PanelTitle" parent="android:TextAppearance.DeviceDefault">
-        <item name="android:textSize">21sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textColor">@color/panel_text</item>
     </style>
 
-    <style name="PanelRowTitle" parent="android:TextAppearance.DeviceDefault">
-        <item name="android:textSize">17sp</item>
-        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    <style name="PanelSectionText" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/panel_text_secondary</item>
     </style>
 
-    <style name="PanelSummary" parent="android:TextAppearance.DeviceDefault">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">?android:attr/textColorSecondary</item>
-    </style>
-
-    <style name="PanelCard">
+    <style name="PanelRowTitle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginBottom">12dp</item>
-        <item name="android:background">@drawable/panel_card</item>
-        <item name="android:clipToOutline">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/panel_text</item>
+    </style>
+
+    <style name="PanelRowSummary">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/panel_text_secondary</item>
+    </style>
+
+    <style name="PanelTextButton">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/panel_row_background</item>
+        <item name="android:textAppearance">@android:style/TextAppearance.DeviceDefault</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textColor">@color/panel_text</item>
     </style>
 
     <style name="PanelRow">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:minHeight">64dp</item>
+        <item name="android:minHeight">56dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:paddingHorizontal">20dp</item>
-        <item name="android:paddingVertical">10dp</item>
-        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:paddingStart">26dp</item>
+        <item name="android:paddingEnd">22dp</item>
+        <item name="android:paddingVertical">8dp</item>
+        <item name="android:background">@drawable/panel_row_background</item>
     </style>
 
     <style name="PanelRowIcon">
         <item name="android:layout_width">24dp</item>
         <item name="android:layout_height">24dp</item>
         <item name="android:layout_marginEnd">16dp</item>
-        <item name="android:tint">?android:attr/textColorPrimary</item>
+        <item name="android:tint">@color/panel_text</item>
+    </style>
+
+    <style name="PanelDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginHorizontal">20dp</item>
+        <item name="android:background">@color/panel_divider</item>
     </style>
 
     <style name="PanelVerticalDivider">
         <item name="android:layout_width">1dp</item>
-        <item name="android:layout_height">28dp</item>
-        <item name="android:layout_marginHorizontal">16dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:layout_marginHorizontal">14dp</item>
         <item name="android:background">@color/panel_divider</item>
     </style>
 </resources>

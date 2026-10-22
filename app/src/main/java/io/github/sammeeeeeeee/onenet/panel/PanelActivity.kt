@@ -2,7 +2,11 @@ package io.github.sammeeeeeeee.onenet.panel
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.WallpaperManager
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Bundle
@@ -12,10 +16,9 @@ import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowInsets
 import android.view.WindowManager
-import android.widget.Button
+import android.view.animation.PathInterpolator
+import android.window.OnBackInvokedDispatcher
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
@@ -46,7 +49,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/** Pixel's internet panel, in One UI's styling. Opens on long-press of the tile. */
+/**
+ * Pixel's internet panel (rows, wording, behaviour) dressed as One UI 9's quick panel detail
+ * view: big title over a frosted card, "Details | Done" underneath. Opens on long-press.
+ */
 class PanelActivity : Activity() {
 
     private val scope = MainScope()
@@ -63,28 +69,29 @@ class PanelActivity : Activity() {
     private lateinit var wifiManager: WifiManager
     private lateinit var subtitle: TextView
     private lateinit var progress: ProgressBar
+    private lateinit var backdrop: View
+    private lateinit var content: View
     private lateinit var shizukuBanner: View
     private lateinit var shizukuText: TextView
-    private lateinit var shizukuButton: Button
+    private lateinit var shizukuButton: TextView
     private lateinit var mobileRow: View
     private lateinit var mobileIcon: ImageView
     private lateinit var mobileTitle: TextView
     private lateinit var mobileSummary: TextView
     private lateinit var mobileSwitch: Switch
     private lateinit var wifiSwitch: Switch
-    private lateinit var networks: View
     private lateinit var connectedRow: View
     private lateinit var connectedIcon: ImageView
     private lateinit var connectedTitle: TextView
     private lateinit var connectedSummary: TextView
     private lateinit var networkList: LinearLayout
-    private lateinit var seeAll: View
-    private lateinit var airplaneButton: Button
+    private lateinit var airplaneButton: TextView
+    private var dismissing = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, R.anim.panel_enter, 0)
-        overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, R.anim.panel_exit)
+        overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0)
+        overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
         setContentView(R.layout.activity_panel)
         labels = PanelLabels(
             wifiIsOff = getString(R.string.wifi_is_off),
@@ -99,6 +106,8 @@ class PanelActivity : Activity() {
         )
         wifiManager = getSystemService(WifiManager::class.java)
 
+        backdrop = findViewById(R.id.backdrop)
+        content = findViewById(R.id.content)
         subtitle = findViewById(R.id.subtitle)
         progress = findViewById(R.id.progress)
         shizukuBanner = findViewById(R.id.shizuku_banner)
@@ -110,33 +119,23 @@ class PanelActivity : Activity() {
         mobileSummary = findViewById(R.id.mobile_summary)
         mobileSwitch = findViewById(R.id.mobile_switch)
         wifiSwitch = findViewById(R.id.wifi_switch)
-        networks = findViewById(R.id.networks)
         connectedRow = findViewById(R.id.connected_row)
         connectedIcon = findViewById(R.id.connected_icon)
         connectedTitle = findViewById(R.id.connected_title)
         connectedSummary = findViewById(R.id.connected_summary)
         networkList = findViewById(R.id.network_list)
-        seeAll = findViewById(R.id.see_all)
         airplaneButton = findViewById(R.id.airplane_button)
 
-        val card = findViewById<View>(R.id.card)
-        val margin = resources.getDimensionPixelSize(R.dimen.panel_margin)
-        card.setOnApplyWindowInsetsListener { view, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars())
-            (view.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                topMargin = bars.top + margin
-                bottomMargin = bars.bottom + margin
-            }
-            view.requestLayout()
-            insets
-        }
-        findViewById<View>(R.id.root).setOnClickListener { finish() }
-        findViewById<View>(R.id.done).setOnClickListener { finish() }
+        backdrop.background = backdrop()
+        enter()
+        findViewById<View>(R.id.root).setOnClickListener { dismiss() }
+        findViewById<View>(R.id.done).setOnClickListener { dismiss() }
+        findViewById<View>(R.id.details).setOnClickListener { openWifiSettings() }
+        onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) { dismiss() }
         mobileRow.setOnClickListener { switchToMobile() }
         mobileSwitch.setOnClickListener { onMobileSwitch(mobileSwitch.isChecked) }
         wifiSwitch.setOnClickListener { onWifiSwitch(wifiSwitch.isChecked) }
         connectedRow.setOnClickListener { openWifiSettings() }
-        seeAll.setOnClickListener { openWifiSettings() }
         airplaneButton.setOnClickListener { run("cmd connectivity airplane-mode disable") }
     }
 
@@ -200,6 +199,7 @@ class PanelActivity : Activity() {
 
         subtitle.text = PanelText.subtitle(wifiEnabled, hasNetworks, searching, mobile, mobileActive, labels)
         progress.visibility = if (searching || network.toggle != WifiToggle.State.NORMAL) View.VISIBLE else View.INVISIBLE
+        subtitle.visibility = if (subtitle.text.isNullOrEmpty()) View.GONE else View.VISIBLE
 
         shizukuBanner.visibility = if (ready) View.GONE else View.VISIBLE
         if (!ready) {
@@ -214,8 +214,7 @@ class PanelActivity : Activity() {
         wifiSwitch.isChecked = wifiEnabled
         wifiSwitch.isEnabled = ready
 
-        val others = list?.others.orEmpty()
-        networks.visibility = if (wifiEnabled && hasNetworks) View.VISIBLE else View.GONE
+        val others = list?.others.orEmpty().takeIf { wifiEnabled }.orEmpty()
         connectedRow.visibility = if (connected != null) View.VISIBLE else View.GONE
         if (connected != null) {
             val online = default?.transport == Transport.WIFI && default.validated
@@ -223,11 +222,9 @@ class PanelActivity : Activity() {
             connectedTitle.text = connected.ssid
             connectedSummary.setText(if (online) R.string.connected else R.string.no_internet)
         }
-        val rows = PanelText.networkRows(mobile != null, connected != null)
+        // Samsung's detail cards scroll the whole list; Details stands in for Pixel's "See all".
         networkList.removeAllViews()
-        others.take(rows).forEach { networkList.addView(networkRow(it, ready)) }
-        networkList.visibility = if (networkList.childCount > 0) View.VISIBLE else View.GONE
-        seeAll.visibility = if (others.size > rows) View.VISIBLE else View.GONE
+        others.forEach { networkList.addView(networkRow(it, ready)) }
 
         airplaneButton.visibility = if (network.airplaneMode) View.VISIBLE else View.GONE
         airplaneButton.isEnabled = ready
@@ -376,6 +373,40 @@ class PanelActivity : Activity() {
         finish()
     }
 
+    // One UI's detail view zooms in over the blurred quick panel; this does the same over a
+    // backdrop that stands in for that blur.
+    private fun enter() {
+        backdrop.alpha = 0f
+        content.alpha = 0f
+        content.scaleX = ENTER_SCALE
+        content.scaleY = ENTER_SCALE
+        backdrop.animate().alpha(1f).setDuration(250).start()
+        content.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(350).setInterpolator(ONE_UI_EASE).start()
+    }
+
+    private fun dismiss() {
+        if (dismissing) return
+        dismissing = true
+        content.animate().alpha(0f).scaleX(EXIT_SCALE).scaleY(EXIT_SCALE).setDuration(200).setInterpolator(ONE_UI_EASE).start()
+        backdrop.animate().alpha(0f).setDuration(200).withEndAction { finish() }.start()
+    }
+
+    /**
+     * The quick panel's backdrop is the wallpaper, heavily blurred. Samsung doesn't blur windows
+     * of other apps, so paint the same thing: the wallpaper's own colours as a soft gradient.
+     */
+    private fun backdrop(): GradientDrawable {
+        val colors = WallpaperManager.getInstance(this).getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+        val primary = colors?.primaryColor?.toArgb() ?: FALLBACK_BACKDROP
+        val secondary = colors?.secondaryColor?.toArgb() ?: primary
+        val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val veil = if (night) Color.BLACK else Color.WHITE
+        val amount = if (night) 0.55f else 0.25f
+        val alpha = if (getSystemService(WindowManager::class.java).isCrossWindowBlurEnabled) 0xB0 else 0xF5
+        val stops = listOf(primary, primary, secondary).map { withAlpha(blend(it, veil, amount), alpha) }
+        return GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, stops.toIntArray())
+    }
+
     private fun openShizuku() {
         startActivity(
             Shell.shizukuLaunchIntent(this)
@@ -393,9 +424,24 @@ class PanelActivity : Activity() {
     }
 
     private companion object {
+        const val ENTER_SCALE = 0.9f
+        const val EXIT_SCALE = 0.95f
+        val ONE_UI_EASE = PathInterpolator(0.22f, 0.25f, 0f, 1f)
+        const val FALLBACK_BACKDROP = 0xFF5E7A86.toInt()
         const val SEARCH_MS = 8_000L
         const val CONNECT_TIMEOUT_MS = 15_000L
         val OPEN_SECURITY = setOf(Security.OPEN, Security.OWE)
+
+        fun blend(color: Int, with: Int, amount: Float): Int {
+            fun mix(a: Int, b: Int) = (a + (b - a) * amount).toInt()
+            return Color.rgb(
+                mix(Color.red(color), Color.red(with)),
+                mix(Color.green(color), Color.green(with)),
+                mix(Color.blue(color), Color.blue(with)),
+            )
+        }
+
+        fun withAlpha(color: Int, alpha: Int) = (color and 0x00FFFFFF) or (alpha shl 24)
 
         /** Single-quotes [value] for `sh -c`. */
         fun quote(value: String) = "'" + value.replace("'", "'\\''") + "'"

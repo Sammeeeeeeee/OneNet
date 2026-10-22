@@ -112,6 +112,11 @@ class TileContentTest {
         content(NetworkState(default = cell, mobile = vodafone, toggle = WifiToggle.State.SCANNING)),
     )
 
+    @Test fun scanningEndsOnceWifiCarriesTraffic() = assertEquals(
+        TileContent("Internet", "Home", TileIcon.Wifi(3), active = true),
+        content(NetworkState(default = wifi, ssid = "Home", toggle = WifiToggle.State.SCANNING)),
+    )
+
     @Test fun pausingShowsMobileStraightAway() = assertEquals(
         TileContent("Internet", "Vodafone, 5G", TileIcon.Cellular(2), active = true),
         content(NetworkState(default = wifi, ssid = "Home", mobile = vodafone, toggle = WifiToggle.State.PAUSING)),

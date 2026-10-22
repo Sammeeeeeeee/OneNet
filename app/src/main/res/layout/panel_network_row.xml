@@ -12,7 +12,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:importantForAccessibility="no"
-            android:tint="?android:attr/textColorPrimary" />
+            android:tint="@color/panel_text" />
 
         <ImageView
             android:id="@+id/lock"
@@ -21,7 +21,7 @@
             android:layout_gravity="bottom|end"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_lock"
-            android:tint="?android:attr/textColorPrimary" />
+            android:tint="@color/panel_text" />
     </FrameLayout>
 
     <LinearLayout
@@ -32,16 +32,10 @@
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="@style/PanelRowTitle" />
+            style="@style/PanelRowTitle" />
 
         <TextView
             android:id="@+id/summary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/PanelSummary" />
+            style="@style/PanelRowSummary" />
     </LinearLayout>
 </LinearLayout>
