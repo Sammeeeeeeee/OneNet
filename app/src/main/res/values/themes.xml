@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.OneNet" parent="android:Theme.DeviceDefault.DayNight" />
+    <style name="Theme.OneNet" parent="android:Theme.DeviceDefault.DayNight">
+        <item name="android:windowBackground">@color/setup_background</item>
+        <item name="android:windowLightStatusBar">@bool/light_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/light_bars</item>
+    </style>
 
     <!-- Samsung skins DeviceDefault as One UI, so framework widgets here render as One UI's. -->
     <style name="Theme.OneNet.Panel" parent="android:Theme.DeviceDefault.DayNight">
@@ -15,13 +19,83 @@
         <item name="android:windowAnimationStyle">@null</item>
     </style>
 
-    <style name="SectionTitle">
+    <!-- Setup: One UI's settings look. Rounded cards on a grey page, large title above. -->
+    <style name="SetupLargeTitle" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">34sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="SetupToolbarTitle" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="SetupCard">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">28dp</item>
-        <item name="android:layout_marginBottom">6dp</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItemSmall</item>
-        <item name="android:textColor">?android:attr/colorAccent</item>
+        <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@drawable/setup_card</item>
+        <item name="android:clipToOutline">true</item>
+    </style>
+
+    <style name="SetupRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">72dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingVertical">16dp</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <style name="SetupRowText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="SetupRowTitle" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="SetupRowSummary" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <style name="SetupSectionTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:textAppearance">@style/SetupRowSummary</item>
+    </style>
+
+    <style name="SetupFootnote">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingBottom">20dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <style name="PreviewTitle" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/preview_title</item>
+    </style>
+
+    <style name="PreviewSubtitle" parent="android:TextAppearance.DeviceDefault">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/preview_subtitle</item>
     </style>
 
     <style name="PanelTitle" parent="android:TextAppearance.DeviceDefault">

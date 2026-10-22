@@ -11,7 +11,6 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.text.Editable
 import android.text.InputType
-import android.text.TextUtils
 import android.text.TextWatcher
 import android.transition.ChangeBounds
 import android.transition.Fade
@@ -49,6 +48,7 @@ import io.github.sammeeeeeeee.onenet.shell.Shell
 import io.github.sammeeeeeeee.onenet.shell.WifiList
 import io.github.sammeeeeeeee.onenet.shell.WifiNetwork
 import io.github.sammeeeeeeee.onenet.shell.WifiScan
+import io.github.sammeeeeeeee.onenet.ui.fadeTo
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -204,7 +204,7 @@ class PanelActivity : Activity() {
     }
 
     override fun finish() {
-        if (closing || !card.isLaidOut) {
+        if (closing || !::card.isInitialized || !card.isLaidOut) {
             super.finish()
             return
         }
@@ -433,28 +433,6 @@ class PanelActivity : Activity() {
         mobileRow.isEnabled = ready && mobile.dataEnabled && !mobileActive
     }
 
-    /**
-     * Cross-fades to [value]. Null keeps the old text, for a view about to be hidden to fade out
-     * with; a hidden view changes at once.
-     */
-    private fun TextView.fadeTo(value: CharSequence?) {
-        val wanted = value ?: ""
-        if (TextUtils.equals(getTag(R.id.pending_text) as CharSequence? ?: text, wanted)) return
-        setTag(R.id.pending_text, wanted)
-        animate().cancel()
-        when {
-            value.isNullOrEmpty() -> alpha = 1f
-            !isShown || text.isNullOrEmpty() -> {
-                alpha = 1f
-                text = value
-            }
-            else -> animate().alpha(0f).setDuration(TEXT_OUT_MS).withEndAction {
-                text = value
-                animate().alpha(1f).setDuration(TEXT_IN_MS)
-            }
-        }
-    }
-
     private fun switchToMobile() {
         scope.launch {
             WifiToggle.pause(this@PanelActivity)
@@ -612,8 +590,6 @@ class PanelActivity : Activity() {
         val EASE_OUT = PathInterpolator(0.17f, 0.17f, 0f, 1f)
         val EASE_IN = PathInterpolator(0.4f, 0f, 1f, 1f)
         const val SWITCH_HOLD_MS = 5_000L
-        const val TEXT_OUT_MS = 90L
-        const val TEXT_IN_MS = 160L
         val OPEN_SECURITY = setOf(Security.OPEN, Security.OWE)
 
         /** Single-quotes [value] for `sh -c`. */

@@ -4,4 +4,5 @@
     <dimen name="panel_radius">26dp</dimen>
     <dimen name="panel_card_radius">20dp</dimen>
     <dimen name="panel_blur">40dp</dimen>
+    <dimen name="setup_card_radius">26dp</dimen>
 </resources>

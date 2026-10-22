@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A patch of the frosted quick panel, for the tile preview to sit on. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="315"
+        android:endColor="@color/preview_backdrop_end"
+        android:startColor="@color/preview_backdrop_start" />
+    <corners android:radius="@dimen/setup_card_radius" />
+</shape>

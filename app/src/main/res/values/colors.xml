@@ -4,4 +4,18 @@
     <color name="panel_background">#F2F4F4F6</color>
     <color name="panel_card">#FFFFFFFF</color>
     <color name="panel_divider">#1A000000</color>
+
+    <color name="setup_background">#FFF6F6F6</color>
+    <color name="setup_card">#FFFFFFFF</color>
+
+    <!-- Sampled from One UI 9's quick panel over a light wallpaper. -->
+    <color name="preview_backdrop_start">#FFB9B9B6</color>
+    <color name="preview_backdrop_end">#FFA4ADAC</color>
+    <color name="preview_tile">#FF9CA6A4</color>
+    <color name="preview_circle_on">#FFFCFCFF</color>
+    <color name="preview_circle_off">#FF838D8C</color>
+    <color name="preview_glyph_on">#FF2B2B2B</color>
+    <color name="preview_glyph_off">#FFF4F4F4</color>
+    <color name="preview_title">#FFF7F7F7</color>
+    <color name="preview_subtitle">#D9F7F7F7</color>
 </resources>

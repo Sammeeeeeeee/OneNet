@@ -42,18 +42,26 @@
     <string name="panel_shizuku_unavailable">Shizuku isn’t running. Switches need it.</string>
     <string name="panel_shizuku_permission">Allow OneNet to use Shizuku to change networks.</string>
 
-    <string name="setup_intro">One Internet tile for Wi-Fi and mobile data, as on Pixel. Tap it to switch between Wi-Fi and mobile data; hold it for networks. Stretch it to 2× wide to see the network name.</string>
+    <string name="setup_tagline">Pixel’s Internet tile, in One UI</string>
+    <string name="setup_preview_note">Your tile, live. Stretch it to 2× wide in the quick panel to see the network name.</string>
     <string name="setup_shizuku">Shizuku</string>
-    <string name="setup_shizuku_ready">Connected.</string>
-    <string name="setup_shizuku_permission">Running. Allow OneNet to use it so the tile can show the Wi-Fi name.</string>
-    <string name="setup_shizuku_unavailable">Not running. Without it the tile shows “Wi-Fi” instead of the network name.</string>
+    <string name="setup_shizuku_ready">Connected</string>
+    <string name="setup_shizuku_permission">Allow OneNet to use it, so the tile can name your Wi-Fi and switch networks.</string>
+    <string name="setup_shizuku_unavailable">Not running. Without it the tile can’t name your Wi-Fi or switch networks.</string>
     <string name="setup_shizuku_allow">Allow</string>
-    <string name="setup_shizuku_open">Open Shizuku</string>
+    <string name="setup_shizuku_open">Open</string>
     <string name="setup_quick_panel">Quick panel</string>
     <string name="setup_add_tile">Add Internet tile</string>
+    <string name="setup_add_tile_summary">Then, in the quick panel’s edit mode, drag its edge to make it 2× wide.</string>
     <string name="setup_tile_added">Tile added</string>
     <string name="setup_tile_already_added">Already in the quick panel</string>
     <string name="setup_tile_failed">Add it from the quick panel: Edit, then Add a control.</string>
     <string name="setup_name_as_title">Network name as title</string>
-    <string name="setup_name_as_title_summary">For quick panels that show only one line of text. Off: as One UI’s own tiles, “Wi-Fi” or “Mobile data” with the network name below.</string>
+    <string name="setup_name_as_title_summary">Puts the Wi-Fi or carrier name first, for quick panels that show one line.</string>
+    <string name="setup_how_it_works">How it works</string>
+    <string name="setup_tap">Tap</string>
+    <string name="setup_tap_summary">Switches between Wi-Fi and mobile data, as on Pixel. Wi-Fi stays on, so tap again to go back.</string>
+    <string name="setup_hold">Touch and hold</string>
+    <string name="setup_hold_summary">Opens the internet panel: mobile data and Wi-Fi switches, and networks to join.</string>
+    <string name="setup_about">OneNet %1$s · Source code</string>
 </resources>

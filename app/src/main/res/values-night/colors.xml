@@ -3,4 +3,12 @@
     <color name="panel_background">#F2101012</color>
     <color name="panel_card">#FF242426</color>
     <color name="panel_divider">#24FFFFFF</color>
+
+    <color name="setup_background">#FF000000</color>
+    <color name="setup_card">#FF171717</color>
+
+    <color name="preview_backdrop_start">#FF31373A</color>
+    <color name="preview_backdrop_end">#FF23292B</color>
+    <color name="preview_tile">#FF434B4D</color>
+    <color name="preview_circle_off">#FF5D6567</color>
 </resources>
