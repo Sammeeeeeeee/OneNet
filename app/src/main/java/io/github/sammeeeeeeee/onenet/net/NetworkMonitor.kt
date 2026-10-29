@@ -14,7 +14,6 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.ServiceState
-import android.telephony.SignalStrength
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyCallback
 import android.telephony.TelephonyDisplayInfo
@@ -49,6 +48,7 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private val wifi = context.getSystemService(WifiManager::class.java)
     private val telephony = context.getSystemService(TelephonyManager::class.java)
+    private val maxWifiLevel by lazy { wifi.maxSignalLevel }
 
     private val defaultNetwork = defaultNetworkFlow()
         .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
@@ -130,7 +130,7 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
         val rssi = (caps.transportInfo as? WifiInfo)?.rssi?.takeIf { it > INVALID_RSSI }
             ?: caps.signalStrength.takeIf { it > INVALID_RSSI }
             ?: return 0
-        val max = wifi.maxSignalLevel
+        val max = maxWifiLevel
         if (max <= 0) return 0
         return (wifi.calculateSignalLevel(rssi) * 4 + max / 2) / max
     }
@@ -235,7 +235,6 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
 
         val callback = object : TelephonyCallback(),
             TelephonyCallback.ServiceStateListener,
-            TelephonyCallback.SignalStrengthsListener,
             TelephonyCallback.DisplayInfoListener,
             TelephonyCallback.UserMobileDataStateListener {
 
@@ -246,9 +245,6 @@ class NetworkMonitor(context: Context, scope: CoroutineScope) {
                     carrier = carrierName(tm, serviceState.roaming),
                 )
             )
-
-            override fun onSignalStrengthsChanged(signalStrength: SignalStrength) =
-                update(state.copy(level = signalStrength.level))
 
             override fun onDisplayInfoChanged(telephonyDisplayInfo: TelephonyDisplayInfo) = update(
                 state.copy(

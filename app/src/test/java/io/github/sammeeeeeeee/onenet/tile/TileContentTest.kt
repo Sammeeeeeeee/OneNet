@@ -20,7 +20,7 @@ class TileContentTest {
 
     private val wifi = DefaultNetwork(handle = 1, transport = Transport.WIFI, validated = true, wifiLevel = 3)
     private val cell = DefaultNetwork(handle = 2, transport = Transport.CELLULAR, validated = true)
-    private val vodafone = MobileState(carrier = "Vodafone", networkType = "5G", level = 2, dataEnabled = true)
+    private val vodafone = MobileState(carrier = "Vodafone", networkType = "5G", dataEnabled = true)
 
     private fun content(state: NetworkState, nameAsTitle: Boolean = false) = tileContent(state, nameAsTitle, labels)
 

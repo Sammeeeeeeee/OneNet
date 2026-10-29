@@ -94,6 +94,7 @@ class PanelActivity : Activity() {
 
     private lateinit var labels: PanelLabels
     private lateinit var wifiManager: WifiManager
+    private val maxWifiLevel by lazy { wifiManager.maxSignalLevel }
     private lateinit var accent: ColorStateList
     private lateinit var primary: ColorStateList
     private lateinit var card: ViewGroup
@@ -576,7 +577,7 @@ class PanelActivity : Activity() {
     }
 
     private fun level(rssi: Int): Int {
-        val max = wifiManager.maxSignalLevel
+        val max = maxWifiLevel
         return if (max <= 0) 0 else (wifiManager.calculateSignalLevel(rssi) * 4 + max / 2) / max
     }
 
