@@ -57,18 +57,16 @@ object WifiToggle {
 
     /** Off Wi-Fi and onto mobile data; Wi-Fi won't auto-connect until resumed. */
     suspend fun pause(context: Context) {
-        _state.value = State.PAUSING
+        settle(context, State.PAUSING)
         if (!Shell.pauseWifi(SubscriptionManager.getDefaultDataSubscriptionId())) {
             Shell.exec("cmd wifi set-wifi-enabled disabled")
         }
-        settle(context, wifiDefault = false)
     }
 
     suspend fun resume(context: Context) {
-        _state.value = State.SCANNING
+        settle(context, State.SCANNING)
         Shell.resumeWifi()
         Shell.exec("cmd wifi start-scan")
-        settle(context, wifiDefault = true)
     }
 
     suspend fun enable(context: Context) {
@@ -76,11 +74,17 @@ object WifiToggle {
         resume(context)
     }
 
-    /** Holds the transitional state until Wi-Fi carries traffic (or stops), at most 10 s, as Pixel does. */
-    private fun settle(context: Context, wifiDefault: Boolean) {
+    /**
+     * Holds [state] until Wi-Fi carries traffic (or stops), at most 10 s, as Pixel does. Starts
+     * before the shell calls, so a caller cancelled during them (the panel closing) can't leave
+     * the tile stuck mid-toggle.
+     */
+    private fun settle(context: Context, state: State) {
         val connectivity = context.applicationContext.getSystemService(ConnectivityManager::class.java)
+        val wifiDefault = state == State.SCANNING
         settling?.cancel()
         _joining.value = null
+        _state.value = state
         settling = scope.launch {
             val polling = if (wifiDefault) launch { pollJoining() } else null
             withTimeoutOrNull(SETTLE_TIMEOUT_MS) {

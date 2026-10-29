@@ -17,8 +17,6 @@ data class MobileState(
     val carrier: String? = null,
     /** "5G", "4G", "LTE+", ... */
     val networkType: String? = null,
-    /** 0..4 */
-    val level: Int = 0,
     val inService: Boolean = true,
     val roaming: Boolean = false,
     val dataEnabled: Boolean = false,
